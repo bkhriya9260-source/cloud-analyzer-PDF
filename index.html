@@ -1,0 +1,122 @@
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-com Analytics Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur py-4 px-6 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-chart-line text-blue-500 text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-wide">E-com <span class="text-blue-500">Analyzer Engine</span></h1>
+        </div>
+        <span class="bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/20 font-medium">V1 Engine Live</span>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl mx-auto w-full p-6 flex flex-col gap-8">
+        
+        <!-- Hero Input Section -->
+        <section class="text-center py-6">
+            <h2 class="text-3xl font-extrabold mb-3">Analyze Any E-commerce Product URL</h2>
+            <p class="text-slate-400 text-sm max-w-lg mx-auto">Instant e-commerce extraction, competitor insights, and AI marketing angles in one comprehensive report.</p>
+            
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+                <input type="url" id="productUrl" placeholder="Paste product link (e.g., Shopify, Amazon, dropship store)..." 
+                       class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                <button onclick="analyzeProduct()" id="btnAnalyze" 
+                        class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> Run Research
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loader" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3"></div>
+            <p class="text-slate-400 text-sm">Extracting data & generating AI marketing angles...</p>
+        </div>
+
+        <!-- Results Section -->
+        <section id="results" class="hidden flex flex-col gap-6">
+            
+            <!-- Summary Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
+                <h3 id="resTitle" class="text-xl font-bold text-white mb-2">Product Title Placeholder</h3>
+                <p id="resPrice" class="text-2xl font-black text-green-400 mb-4">$0.00</p>
+                <p id="resDesc" class="text-slate-300 text-sm leading-relaxed"></p>
+            </div>
+
+            <!-- AI Marketing Report -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
+                    <h4 class="font-semibold text-blue-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> Target Audience
+                    </h4>
+                    <p id="resAudience" class="text-slate-300 text-sm leading-relaxed"></p>
+                </div>
+                
+                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
+                    <h4 class="font-semibold text-purple-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i> Ad Angles & Hooks
+                    </h4>
+                    <p id="resHooks" class="text-slate-300 text-sm leading-relaxed"></p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Script to Connect Render API -->
+    <script>
+        const RENDER_API_URL = "https://cloud-analyzer-pdf.onrender.com/analyze"; // Aapka Render backend URL
+
+        async function analyzeProduct() {
+            const urlInput = document.getElementById('productUrl').value;
+            if(!urlInput) {
+                alert('Please enter a product URL!');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results');
+            const btn = document.getElementById('btnAnalyze');
+
+            loader.classList.remove('hidden');
+            results.classList.add('hidden');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(RENDER_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const data = await response.json();
+
+                // UI Update
+                document.getElementById('resTitle').innerText = data.product_title || 'Scraped Product';
+                document.getElementById('resPrice').innerText = data.price || 'N/A';
+                document.getElementById('resDesc').innerText = data.description || 'No description extracted.';
+                document.getElementById('resAudience').innerText = data.ai_analysis?.target_audience || 'General Consumers';
+                document.getElementById('resHooks').innerText = data.ai_analysis?.marketing_angle || 'Direct problem-solution approach.';
+
+                results.classList.remove('hidden');
+            } catch (err) {
+                alert('Error connecting to backend server. Make sure Render API is active.');
+                console.error(err);
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
