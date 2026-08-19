@@ -27,7 +27,7 @@
             <p class="text-slate-400 text-sm max-w-lg mx-auto">Instant e-commerce extraction, competitor insights, and AI marketing angles in one comprehensive report.</p>
             
             <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-                <input type="url" id="productUrl" placeholder="Paste product link (e.g., Shopify, Amazon, dropship store)..." 
+                <input type="url" id="productUrl" placeholder="Paste product link (e.g., https://buyarfa.store)..." 
                        class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
                 <button onclick="analyzeProduct()" id="btnAnalyze" 
                         class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
@@ -39,7 +39,7 @@
         <!-- Loading State -->
         <div id="loader" class="hidden text-center py-12">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3"></div>
-            <p class="text-slate-400 text-sm">Extracting data & generating AI marketing angles...</p>
+            <p class="text-slate-400 text-sm">Extracting live data & detecting store weak points...</p>
         </div>
 
         <!-- Results Section -->
@@ -67,13 +67,20 @@
                     </h4>
                     <p id="resHooks" class="text-slate-300 text-sm leading-relaxed"></p>
                 </div>
+
+                <!-- Weak Points Section -->
+                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 md:col-span-2">
+                    <h4 class="font-semibold text-red-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Store Weak Points & Drawbacks
+                    </h4>
+                    <ul id="resWeakPoints" class="text-slate-300 text-sm list-disc list-inside space-y-2"></ul>
+                </div>
             </div>
 
         </section>
 
     </main>
 
-    <!-- Script to Connect Render API -->
     <script>
         const RENDER_API_URL = "https://cloud-analyzer-pdf.onrender.com/analyze"; 
 
@@ -104,12 +111,24 @@
 
                 const data = await response.json();
 
-                // UI Update
                 document.getElementById('resTitle').innerText = data.product_title || 'Scraped Product';
                 document.getElementById('resPrice').innerText = data.price || 'N/A';
                 document.getElementById('resDesc').innerText = data.description || 'No description extracted.';
                 document.getElementById('resAudience').innerText = data.ai_analysis?.target_audience || 'General Consumers';
                 document.getElementById('resHooks').innerText = data.ai_analysis?.marketing_angle || 'Direct problem-solution approach.';
+
+                // Render Weak Points
+                const weakList = document.getElementById('resWeakPoints');
+                weakList.innerHTML = '';
+                if (data.ai_analysis?.weak_points && data.ai_analysis.weak_points.length > 0) {
+                    data.ai_analysis.weak_points.forEach(point => {
+                        const li = document.createElement('li');
+                        li.innerText = point;
+                        weakList.appendChild(li);
+                    });
+                } else {
+                    weakList.innerHTML = '<li>No major weak points detected.</li>';
+                }
 
                 results.classList.remove('hidden');
             } catch (err) {
