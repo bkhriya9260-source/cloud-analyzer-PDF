@@ -8,7 +8,16 @@ import json
 from urllib.parse import urlparse, quote
 
 app = FastAPI(title="Ultimate E-commerce AI & Revenue Intelligence Engine")
+from fastapi.responses import HTMLResponse
+import os
 
+@app.get("/", response_class=HTMLResponse)
+def serve_ui():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+
+    return "<h2>index.html missing</h2>"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
