@@ -3,141 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-com Analytics Engine</title>
+    <title>E-commerce Revenue & AI Intelligence Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans">
-
-    <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur py-4 px-6 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-chart-line text-blue-500 text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wide">E-com <span class="text-blue-500">Analyzer Engine</span></h1>
-        </div>
-        <span class="bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/20 font-medium">V1 Engine Live</span>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-4xl mx-auto w-full p-6 flex flex-col gap-8">
+<body class="bg-slate-900 text-white min-h-screen p-6">
+    <div class="max-w-5xl mx-auto space-y-6">
         
-        <!-- Hero Input Section -->
-        <section class="text-center py-6">
-            <h2 class="text-3xl font-extrabold mb-3">Analyze Any E-commerce Product URL</h2>
-            <p class="text-slate-400 text-sm max-w-lg mx-auto">Instant e-commerce extraction, competitor insights, and AI marketing angles in one comprehensive report.</p>
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-bold text-indigo-400">E-Commerce Store & Revenue Auditor</h1>
+            <p class="text-slate-400">Deep Analytics, Multi-Platform Scraper & Revenue Intelligence Engine</p>
+        </div>
+
+        <!-- Controls & Input Form -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4 shadow-lg">
             
-            <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-                <input type="url" id="productUrl" placeholder="Paste product link (e.g., https://buyarfa.store)..." 
-                       class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
-                <button onclick="analyzeProduct()" id="btnAnalyze" 
-                        class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt"></i> Run Research
+            <!-- URL Bar -->
+            <div>
+                <label class="block text-xs text-slate-400 uppercase font-semibold mb-1">Target E-commerce URL</label>
+                <input id="storeUrl" type="text" placeholder="e.g. https://storename.com or brand.com" 
+                       class="w-full bg-slate-700 px-4 py-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-600">
+            </div>
+
+            <!-- Custom Options Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 uppercase font-semibold mb-1">E-commerce Platform</label>
+                    <select id="platformSelect" class="w-full bg-slate-700 px-3 py-2 rounded-lg text-white border border-slate-600 focus:outline-none">
+                        <option value="auto">Auto-Detect Engine</option>
+                        <option value="shopify">Shopify Store</option>
+                        <option value="woocommerce">WooCommerce / WordPress</option>
+                        <option value="generic">Custom Web Store</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 uppercase font-semibold mb-1">Audit Mode</label>
+                    <select id="auditMode" class="w-full bg-slate-700 px-3 py-2 rounded-lg text-white border border-slate-600 focus:outline-none">
+                        <option value="full">Full Revenue & AI Deep Audit</option>
+                        <option value="ai_only">AI Angles & Hook Focus</option>
+                        <option value="financial_only">Financials & COGS Focus</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 uppercase font-semibold mb-1">Target Market Benchmark</label>
+                    <select id="targetMarket" class="w-full bg-slate-700 px-3 py-2 rounded-lg text-white border border-slate-600 focus:outline-none">
+                        <option value="US">United States (E-com Standard)</option>
+                        <option value="UK">United Kingdom / Europe</option>
+                        <option value="GLOBAL">Global Dropshipping</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="analyzeStore()" id="btn" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg font-bold text-lg transition duration-200 shadow-md">
+                Launch Comprehensive Analysis 🚀
+            </button>
+        </div>
+
+        <!-- Result Dashboard -->
+        <div id="report" class="hidden space-y-6">
+            
+            <!-- Store Overview Header -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 flex justify-between items-start">
+                <div>
+                    <h2 id="resTitle" class="text-2xl font-bold text-white mb-1"></h2>
+                    <p id="resVendor" class="text-xs text-indigo-400 mb-3"></p>
+                    <p id="resDesc" class="text-slate-300 text-sm max-w-3xl"></p>
+                </div>
+                <span id="platformBadge" class="bg-indigo-900 text-indigo-300 border border-indigo-500 text-xs px-3 py-1 rounded-full font-bold uppercase">
+                    Detected
+                </span>
+            </div>
+
+            <!-- Revenue Intelligence Metrics Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Est. Monthly Revenue</p>
+                    <p id="resRevenue" class="text-2xl font-extrabold text-green-400 mt-1"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Est. Monthly Profit</p>
+                    <p id="resProfit" class="text-2xl font-extrabold text-emerald-400 mt-1"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Monthly Units Sold</p>
+                    <p id="resUnits" class="text-2xl font-extrabold text-blue-400 mt-1"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Product Price</p>
+                    <p id="resPrice" class="text-lg font-bold text-white mt-1"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Est. COGS / Unit</p>
+                    <p id="resCOGS" class="text-lg font-bold text-slate-300 mt-1"></p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400">Ad Spend / Unit</p>
+                    <p id="resAdSpend" class="text-lg font-bold text-slate-300 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- AI Marketing & Target Insights -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+                <div>
+                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Target Buyer Persona</h3>
+                    <p id="resAudience" class="text-slate-300 text-sm mt-1"></p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">TikTok / Reels Video Ad Angle</h3>
+                    <p id="resHook" class="text-slate-300 text-sm mt-1"></p>
+                </div>
+            </div>
+
+            <!-- Conversion Weaknesses -->
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 class="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">Conversion Funnel Weaknesses</h3>
+                <ul id="resWeakPoints" class="list-disc list-inside space-y-1 text-sm text-slate-300"></ul>
+            </div>
+
+            <!-- Action Controls Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a id="resSupplier" target="_blank" class="text-center bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold py-3 rounded-lg text-sm border border-slate-600 transition">
+                    Search AliExpress Suppliers 🔍
+                </a>
+                <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg text-sm shadow">
+                    Export PDF Report 📄
                 </button>
             </div>
-        </section>
 
-        <!-- Loading State -->
-        <div id="loader" class="hidden text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3"></div>
-            <p class="text-slate-400 text-sm">Extracting live data & detecting store weak points...</p>
         </div>
-
-        <!-- Results Section -->
-        <section id="results" class="hidden flex flex-col gap-6">
-            
-            <!-- Summary Card -->
-            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
-                <h3 id="resTitle" class="text-xl font-bold text-white mb-2">Product Title Placeholder</h3>
-                <p id="resPrice" class="text-2xl font-black text-green-400 mb-4">$0.00</p>
-                <p id="resDesc" class="text-slate-300 text-sm leading-relaxed"></p>
-            </div>
-
-            <!-- AI Marketing Report -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
-                    <h4 class="font-semibold text-blue-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-users"></i> Target Audience
-                    </h4>
-                    <p id="resAudience" class="text-slate-300 text-sm leading-relaxed"></p>
-                </div>
-                
-                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
-                    <h4 class="font-semibold text-purple-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-bullhorn"></i> Ad Angles & Hooks
-                    </h4>
-                    <p id="resHooks" class="text-slate-300 text-sm leading-relaxed"></p>
-                </div>
-
-                <!-- Weak Points Section -->
-                <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 md:col-span-2">
-                    <h4 class="font-semibold text-red-400 text-sm mb-3 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Store Weak Points & Drawbacks
-                    </h4>
-                    <ul id="resWeakPoints" class="text-slate-300 text-sm list-disc list-inside space-y-2"></ul>
-                </div>
-            </div>
-
-        </section>
-
-    </main>
+    </div>
 
     <script>
-        const RENDER_API_URL = "https://cloud-analyzer-pdf.onrender.com/analyze"; 
+        async function analyzeStore() {
+            const urlInput = document.getElementById('storeUrl').value;
+            const btn = document.getElementById('btn');
+            const report = document.getElementById('report');
 
-        async function analyzeProduct() {
-            const urlInput = document.getElementById('productUrl').value;
-            if(!urlInput) {
-                alert('Please enter a product URL!');
-                return;
-            }
+            if(!urlInput) return alert("Please enter a valid URL");
 
-            const loader = document.getElementById('loader');
-            const results = document.getElementById('results');
-            const btn = document.getElementById('btnAnalyze');
-
-            loader.classList.remove('hidden');
-            results.classList.add('hidden');
+            btn.innerText = "Running Engines & Scrapers...";
             btn.disabled = true;
 
             try {
-                const response = await fetch(RENDER_API_URL, {
+                const res = await fetch('https://cloud-analyzer-pdf.onrender.com/analyze', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': 'ADMIN123'
+                        'X-API-KEY': 'ADMIN123'
                     },
                     body: JSON.stringify({ url: urlInput })
                 });
 
-                const data = await response.json();
+                const data = await res.json();
 
-                document.getElementById('resTitle').innerText = data.product_title || 'Scraped Product';
-                document.getElementById('resPrice').innerText = data.price || 'N/A';
-                document.getElementById('resDesc').innerText = data.description || 'No description extracted.';
-                document.getElementById('resAudience').innerText = data.ai_analysis?.target_audience || 'General Consumers';
-                document.getElementById('resHooks').innerText = data.ai_analysis?.marketing_angle || 'Direct problem-solution approach.';
+                // Bind Results
+                document.getElementById('resTitle').innerText = data.store_info.product_title;
+                document.getElementById('resVendor').innerText = "Domain: " + data.store_info.domain + " | Vendor: " + data.store_info.vendor;
+                document.getElementById('resDesc').innerText = data.description;
+                
+                document.getElementById('resRevenue').innerText = data.revenue_intelligence.est_monthly_revenue;
+                document.getElementById('resProfit').innerText = data.revenue_intelligence.est_monthly_profit;
+                document.getElementById('resUnits').innerText = data.revenue_intelligence.est_monthly_units_sold;
+                document.getElementById('resPrice').innerText = data.store_info.price;
+                document.getElementById('resCOGS').innerText = data.revenue_intelligence.est_cogs;
+                document.getElementById('resAdSpend').innerText = data.revenue_intelligence.est_ad_spend_per_unit;
 
-                // Render Weak Points
+                document.getElementById('resAudience').innerText = data.ai_analysis.target_audience;
+                document.getElementById('resHook').innerText = data.ai_analysis.marketing_angle;
+
                 const weakList = document.getElementById('resWeakPoints');
                 weakList.innerHTML = '';
-                if (data.ai_analysis?.weak_points && data.ai_analysis.weak_points.length > 0) {
-                    data.ai_analysis.weak_points.forEach(point => {
-                        const li = document.createElement('li');
-                        li.innerText = point;
-                        weakList.appendChild(li);
-                    });
-                } else {
-                    weakList.innerHTML = '<li>No major weak points detected.</li>';
-                }
+                data.ai_analysis.weak_points.forEach(pt => {
+                    const li = document.createElement('li');
+                    li.innerText = pt;
+                    weakList.appendChild(li);
+                });
 
-                results.classList.remove('hidden');
+                document.getElementById('resSupplier').href = data.supplier_research.supplier_search_link;
+
+                report.classList.remove('hidden');
             } catch (err) {
-                alert('Error connecting to backend server. Make sure Render API is active.');
-                console.error(err);
+                alert("Error analyzing store. Please check the URL or server status.");
             } finally {
-                loader.classList.add('hidden');
+                btn.innerText = "Launch Comprehensive Analysis 🚀";
                 btn.disabled = false;
             }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('report');
+            html2pdf().from(element).save('Store_Audit_Report.pdf');
         }
     </script>
 </body>
