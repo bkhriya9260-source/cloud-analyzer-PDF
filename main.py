@@ -40,7 +40,7 @@ async def analyze_store(req: StoreRequest):
     raw_url = req.url.strip()
     if not raw_url.startswith("http"):
         raw_url = "https://" + raw_url
-    
+
     parsed = urlparse(raw_url)
     domain = parsed.netloc if parsed.netloc else parsed.path.split('/')[0]
     domain = domain.replace("www.", "")
@@ -49,7 +49,7 @@ async def analyze_store(req: StoreRequest):
     product_title = f"{domain.capitalize()} Featured Product"
     vendor_name = domain.capitalize()
     base_price = 49.99
-    
+
     # Real Scraping Attempt
     try:
         async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
@@ -65,14 +65,11 @@ async def analyze_store(req: StoreRequest):
     except Exception:
         pass
 
-    # Financial & Revenue Calculations
-    est_monthly_units = 520
-    est_monthly_revenue = round(base_price * est_monthly_units, 2)
-    cogs = round(base_price * 0.33, 2)
-    gateway_fee = round((base_price * 0.029) + 0.30, 2)
-    est_ad_spend = round(base_price * 0.35, 2)
-    net_profit_per_unit = round(base_price - cogs - gateway_fee - est_ad_spend, 2)
-    est_monthly_profit = round(net_profit_per_unit * est_monthly_units, 2)
+    # NOTE: revenue_intelligence block removed — est_monthly_units (520) tha fixed/fake
+    # value jo har store ke liye same result deta tha. Jab tak real traffic/sales
+    # signal (SimilarWeb API, review-count velocity, ya historical scan data) available
+    # nahi hota, ye section wapas nahi jodna — fake number dena real data se zyada
+    # nuksaan karta hai (user trust break hota hai jab pakड़ा jaata hai).
 
     return {
         "store_info": {
@@ -80,15 +77,6 @@ async def analyze_store(req: StoreRequest):
             "vendor": vendor_name,
             "product_title": product_title,
             "price": f"${base_price:.2f}"
-        },
-        "revenue_intelligence": {
-            "est_monthly_revenue": f"${est_monthly_revenue:,.2f}",
-            "est_monthly_units_sold": f"{est_monthly_units} units",
-            "est_cogs": f"${cogs:.2f}",
-            "est_gateway_fee": f"${gateway_fee:.2f}",
-            "est_ad_spend_per_unit": f"${est_ad_spend:.2f}",
-            "net_profit_per_unit": f"${net_profit_per_unit:.2f}",
-            "est_monthly_profit": f"${est_monthly_profit:,.2f}"
         },
         "ad_spy": {
             "meta_ad_library": f"https://www.facebook.com/ads/library/?q={quote(vendor_name)}&media_type=all",
