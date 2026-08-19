@@ -1,4 +1,4 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -75,7 +75,7 @@
 
     <!-- Script to Connect Render API -->
     <script>
-        const RENDER_API_URL = "https://cloud-analyzer-pdf.onrender.com/analyze"; // Aapka Render backend URL
+        const RENDER_API_URL = "https://cloud-analyzer-pdf.onrender.com/analyze"; 
 
         async function analyzeProduct() {
             const urlInput = document.getElementById('productUrl').value;
@@ -95,7 +95,10 @@
             try {
                 const response = await fetch(RENDER_API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'ADMIN123'
+                    },
                     body: JSON.stringify({ url: urlInput })
                 });
 
