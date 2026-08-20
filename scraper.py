@@ -1,1 +1,47 @@
-        headings = [h.text.strip() for h in soup.find_all(['h1', 'h2']) if h.text.strip()][:10]        paragraphs = [p.text.strip() for p in soup.find_all('p') if len(p.text.strip()) > 20]        full_text = " ".join(paragraphs)        word_count = len(full_text.split())         # Links Breakdown (Internal vs External & Social)        internal_links = set()        external_links = set()        social_links = set()        social_domains = ["facebook.com", "instagram.com", "twitter.com", "x.com", "linkedin.com", "youtube.com", "tiktok.com"]         for a in soup.find_all("a", href=True):            href = urljoin(base_url, a["href"])            parsed_href = urlparse(href)                        if any(sd in parsed_href.netloc for sd in social_domains):                social_links.add(href)            elif parsed_href.netloc == domain:                internal_links.add(href)            elif parsed_href.scheme in ["http", "https"]:                external_links.add(href)         # Contact Extraction (Emails & Phones)        emails = list(set(re.findall(r'[a-zA-Z0-9%+-.]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', html)))        phone_numbers = list(set(re.findall(r'\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}', html)))         # Images & Alt Text        images = []        for img in soup.find_all("img", src=True):            img_url = urljoin(base_url, img["src"])            alt_text = img.get("alt", "").strip()            images.append({"url": img_url, "alt": alt_text})         return {            "title": title,            "meta_description": meta_description,            "canonical_url": canonical_url,            "language": language,            "word_count": word_count,            "headings": headings,            "text_preview": paragraphs[:10],            "emails": emails[:5],            "phone_numbers": phone_numbers[:5],            "social_links": list(social_links),            "internal_links_count": len(internal_links),            "external_links_count": len(external_links),            "images": images[:10]        } scraper_engine = ScraperEngine() 
+import asyncio
+import httpx
+from bs4 import BeautifulSoup
+from typing import Dict, Any, List, Optional
+
+class CoreScraper:
+    def __init__(self, concurrency_limit: int = 5, timeout: int = 15):
+        self.semaphore = asyncio.Semaphore(concurrency_limit)
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
+        self.timeout = timeout
+
+    async def fetch_page(self, url: str) -> Optional[str]:
+        async with self.semaphore:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                try:
+                    response = await client.get(url, headers=self.headers)
+                    if response.status_code == 200:
+                        return response.text
+                except Exception as e:
+                    print(f"[Scraper Error] Failed to fetch {url}: {str(e)}")
+                return None
+
+    async def get_basic_info(self, url: str) -> Dict[str, Any]:
+        html = await self.fetch_page(url)
+        if not html:
+            return {"status": "failed", "url": url}
+
+        soup = BeautifulSoup(html, "html.parser")
+        title = soup.title.string.strip() if soup.title else ""
+        meta_desc = soup.find("meta", {"name": "description"})
+        description = meta_desc["content"].strip() if meta_desc and "content" in meta_desc.attrs else ""
+
+        return {
+            "status": "success",
+            "url": url,
+            "title": title,
+            "description": description,
+            "has_shopify_signal": "myshopify" in html or "Shopify.theme" in html,
+            "has_woocommerce_signal": "woocommerce" in html or "wp-content" in html
+        }
+
+    async def crawl_queue(self, url_list: List[str]) -> List[Dict[str, Any]]:
+        tasks = [self.get_basic_info(url) for url in url_list]
+        return await asyncio.gather(*tasks)

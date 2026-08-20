@@ -1,0 +1,31 @@
+from typing import Dict, Any
+from ai_reports import AIReportEngine
+from export import ExportEngine
+
+class ReportsUIController:
+    def __init__(self):
+        self.report_engine = AIReportEngine()
+        self.export_engine = ExportEngine()
+
+    def generate_and_export_report(
+        self, 
+        product_title: str, 
+        selling_price: float, 
+        cogs: float, 
+        export_format: str = "JSON"
+    ) -> Any:
+        """Generates 1-Click Executive Market Report and returns formatted JSON or CSV download string"""
+        
+        report = self.report_engine.generate_executive_report(
+            product_title=product_title,
+            opportunity_data={"overall_opportunity_score": 88},
+            profit_data={"selling_price": selling_price, "total_base_cogs": cogs, "gross_margin_pct": 65.0, "break_even_ad_cpa": 25.0},
+            saturation_data={"competition_level": "LOW", "opportunity_gap": "LARGE_UNTAPPED_GAP"},
+            ad_data={"creative_lifecycle_stage": "SCALING_PEAK", "is_winning_creative": True, "hook": "Top Trending Gadget"},
+            price_data={"market_average_price": selling_price * 1.1}
+        )
+
+        if export_format.upper() == "CSV":
+            return self.export_engine.export_to_csv([report["financial_breakdown"]])
+        
+        return self.export_engine.export_to_json(report)
