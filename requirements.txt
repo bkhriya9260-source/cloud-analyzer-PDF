@@ -1,4 +1,3 @@
-
 fastapi
 uvicorn
 httpx
@@ -7,3 +6,6 @@ pydantic
 playwright
 pydantic-settings
 sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
