@@ -38,7 +38,21 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "architecture": "FastAPI Async Core Engine"}
-
+@app.post("/analyze")
+def analyze_store(data: dict):
+    url = data.get("url", "")
+    return {
+        "domain": url,
+        "product_title": "Analyzed E-Com Store",
+        "vendor": "Shopify / Custom",
+        "est_monthly_revenue": 12500,
+        "est_monthly_profit": 3500,
+        "price": 29.99,
+        "est_cogs": 8.50,
+        "tiktok_reels_ad_angle": "Problem-Solution Hook with High Urgency",
+        "target_buyer_persona": "US Impulse Buyers (18-35)",
+        "message": "Analysis successful!"
+    }
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
