@@ -6,3 +6,4 @@ beautifulsoup4
 pydantic
 playwright
 pydantic-settings
+sqlalchemy
