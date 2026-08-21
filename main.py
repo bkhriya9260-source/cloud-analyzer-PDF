@@ -10,6 +10,7 @@ from subscriptions import router as sub_router
 from api import router as api_router 
 from product_search import ProductSearchEngine
 from ai_reports import AIReportEngine
+from store_discovery import StoreDiscovery
 def validate_target_url(url: str):
     parsed = urlparse(url)
     if parsed.scheme not in ["http", "https"]:
@@ -64,7 +65,7 @@ def root():
 def health_check():
     return {"status": "healthy", "architecture": "FastAPI Async Core Engine"}
 @app.post("/analyze")
-def analyze_store(data: dict):
+async def analyze_store(data: dict):
     url = data.get("url", "")
 
    if not url:
@@ -72,7 +73,9 @@ def analyze_store(data: dict):
         # Security Validation Check
         validate_target_url(url)
     search_engine = ProductSearchEngine()
-    results = search_engine.search_products(url)
+  discovery = StoreDiscovery()
+    discovery_res = await discovery.identify_platform_and_niche(url)
+results = search_engine.search_products(url)
     
     report_engine = AIReportEngine()
     report = report_engine.generate_executive_report(
@@ -83,13 +86,16 @@ def analyze_store(data: dict):
         ad_data={"winning": True},
         price_data={"price": 29.99}
     )
-    
-    return {
+return {
         "status": "success",
         "url": url,
+        "platform": discovery_res.get("platform", "Custom/Other"),
+        "niche": discovery_res.get("niche", "General E-Commerce"),
         "search_data": results,
         "ai_report": report
     }
+    
+   
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
