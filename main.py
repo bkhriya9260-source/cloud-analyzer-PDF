@@ -4,9 +4,12 @@ from config import settings
 from database import init_db
 from auth import router as auth_router
 from subscriptions import router as sub_router
-from api import router as api_router
+from api import router as api_router 
+from product_search import ProductSearchEngine
+from ai_reports import AIReportEngine
 app = FastAPI(
-    title=settings.APP_NAME,
+title=settings.APP_NAME,
+
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
     docs_url="/docs"
 )
@@ -41,17 +44,27 @@ def health_check():
 @app.post("/analyze")
 def analyze_store(data: dict):
     url = data.get("url", "")
+    if not url:
+        return {"error": "URL parameter missing"}
+        
+    search_engine = ProductSearchEngine()
+    results = search_engine.search_products(url)
+    
+    report_engine = AIReportEngine()
+    report = report_engine.generate_executive_report(
+        product_title=results.get("title", "Analyzed Store"),
+        opportunity_data={"score": 85},
+        profit_data={"revenue": 12500},
+        saturation_data={"competition": "LOW"},
+        ad_data={"winning": True},
+        price_data={"price": 29.99}
+    )
+    
     return {
-        "domain": url,
-        "product_title": "Analyzed E-Com Store",
-        "vendor": "Shopify / Custom",
-        "est_monthly_revenue": 12500,
-        "est_monthly_profit": 3500,
-        "price": 29.99,
-        "est_cogs": 8.50,
-        "tiktok_reels_ad_angle": "Problem-Solution Hook with High Urgency",
-        "target_buyer_persona": "US Impulse Buyers (18-35)",
-        "message": "Analysis successful!"
+        "status": "success",
+        "url": url,
+        "search_data": results,
+        "ai_report": report
     }
 if __name__ == "__main__":
     import uvicorn
