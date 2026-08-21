@@ -1,3 +1,6 @@
+import ipaddress
+from urllib.parse import urlparse
+from fastapi import HTTPException
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -7,6 +10,25 @@ from subscriptions import router as sub_router
 from api import router as api_router 
 from product_search import ProductSearchEngine
 from ai_reports import AIReportEngine
+def validate_target_url(url: str):
+    parsed = urlparse(url)
+    if parsed.scheme not in ["http", "https"]:
+        raise HTTPException(status_code=400, detail="Invalid URL scheme. Only http/https supported.")
+    
+    hostname = parsed.hostname
+    if not hostname:
+        raise HTTPException(status_code=400, detail="Invalid hostname.")
+        
+    if hostname.lower() in ["localhost", "127.0.0.1", "0.0.0.0", "::1"]:
+        raise HTTPException(status_code=400, detail="Access to internal/localhost is blocked.")
+        
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            raise HTTPException(status_code=400, detail="Private/Internal IP address blocked.")
+    except ValueError:
+        pass
+    return True
 app = FastAPI(
 title=settings.APP_NAME,
 
@@ -44,9 +66,11 @@ def health_check():
 @app.post("/analyze")
 def analyze_store(data: dict):
     url = data.get("url", "")
-    if not url:
+
+   if not url:
         return {"error": "URL parameter missing"}
-        
+        # Security Validation Check
+        validate_target_url(url)
     search_engine = ProductSearchEngine()
     results = search_engine.search_products(url)
     
