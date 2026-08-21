@@ -66,16 +66,18 @@ def health_check():
     return {"status": "healthy", "architecture": "FastAPI Async Core Engine"}
 @app.post("/analyze")
 async def analyze_store(data: dict):
-    url = data.get("url", "")
+  url = data.get("url", "")
 
-   if not url:
-        return {"error": "URL parameter missing"}
-        # Security Validation Check
-        validate_target_url(url)
-    search_engine = ProductSearchEngine()
+  if not url:
+      return {"error": "URL parameter missing"}
+
+  # Security Validation Check
+  validate_target_url(url)
+
+  search_engine = ProductSearchEngine()
   discovery = StoreDiscovery()
-    discovery_res = await discovery.identify_platform_and_niche(url)
-results = search_engine.search_products(url)
+  discovery_res = await discovery.identify_platform_and_niche(url)
+  results = search_engine.search_products(url) 
     
     report_engine = AIReportEngine()
     report = report_engine.generate_executive_report(
