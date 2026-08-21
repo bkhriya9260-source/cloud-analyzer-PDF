@@ -4,7 +4,7 @@ from config import settings
 from database import init_db
 from auth import router as auth_router
 from subscriptions import router as sub_router
-
+from api import router as api_router
 app = FastAPI(
     title=settings.APP_NAME,
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
@@ -26,7 +26,7 @@ init_db()
 # Register Core Routers
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(sub_router, prefix=settings.API_V1_PREFIX)
-
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 @app.get("/")
 def root():
     return {
