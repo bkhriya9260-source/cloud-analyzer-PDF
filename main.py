@@ -13,6 +13,7 @@ from api import router as api_router
 from product_search import ProductSearchEngine
 from ai_reports import AIReportEngine
 from store_discovery import StoreDiscovery
+from profit_engine import ProfitEngine
 def validate_target_url(url: str):
     parsed = urlparse(url)
     if parsed.scheme not in ["http", "https"]:
@@ -126,7 +127,16 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         "ai_report": report,
         "extracted_products": extracted_products
     }
-    
+  @app.post("/calculate-profit")
+async def calculate_profit(data: dict):
+    engine = ProfitEngine()
+    result = engine.calculate_unit_economics(
+        selling_price=float(data.get("selling_price", 0.0)),
+        supplier_cost=float(data.get("supplier_cost", 0.0)),
+        shipping_cost=float(data.get("shipping_cost", 0.0)),
+        estimated_ad_cpa=float(data.get("estimated_ad_cpa", 0.0))
+    )
+    return result  
    
 if __name__ == "__main__":
     import uvicorn
