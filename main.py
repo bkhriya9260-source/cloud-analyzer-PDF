@@ -79,8 +79,8 @@ async def analyze_store(data: dict):
   discovery_res = await discovery.identify_platform_and_niche(url)
   results = search_engine.search_products(url) 
     
-    report_engine = AIReportEngine()
-    report = report_engine.generate_executive_report(
+  report_engine = AIReportEngine()
+  report = report_engine.generate_executive_report(
         product_title=results.get("title", "Analyzed Store"),
         opportunity_data={"score": 85},
         profit_data={"revenue": 12500},
