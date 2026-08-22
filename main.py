@@ -15,6 +15,10 @@ from ai_reports import AIReportEngine
 from store_discovery import StoreDiscovery
 from profit_engine import ProfitEngine
 from trend_engine import TrendEngine
+from price_intelligence import PriceIntelligence
+from competitor_engine import CompetitorEngine
+from saturation_engine import SaturationEngine
+from opportunity_score import OpportunityEngine
 def validate_target_url(url: str):
     parsed = urlparse(url)
     if parsed.scheme not in ["http", "https"]:
@@ -142,6 +146,22 @@ async def calculate_profit(data: dict):
 async def analyze_product_trend(product_id: int, db: Session = Depends(get_db)):
     engine = TrendEngine(db=db)
     return engine.analyze_product_momentum(product_id=product_id)
+@app.get("/price-intelligence/{product_id}")
+async def get_price_intelligence(product_id: int, db: Session = Depends(get_db)):
+    engine = PriceIntelligence(db=db)
+    return engine.analyze_market_pricing(product_id=product_id)
+@app.get("/competitor-analysis/{store_id}")
+async def get_competitor_analysis(store_id: int, db: Session = Depends(get_db)):
+    engine = CompetitorEngine(db=db)
+    return engine.analyze_competitor(store_id=store_id)
+@app.get("/saturation-analysis/{product_id}")
+async def get_saturation_analysis(product_id: int, db: Session = Depends(get_db)):
+    engine = SaturationEngine(db=db)
+    return engine.analyze_saturation(product_id=product_id)
+@app.get("/opportunity-score/{product_id}")
+async def get_opportunity_score(product_id: int, db: Session = Depends(get_db)):
+    engine = OpportunityEngine(db=db)
+    return engine.calculate_score(product_id=product_id)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
