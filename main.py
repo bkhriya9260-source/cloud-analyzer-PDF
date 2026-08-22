@@ -1,11 +1,12 @@
 from product_extractor import ProductExtractor
 import ipaddress
 from urllib.parse import urlparse
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from database import init_db
+from database import init_db, get_db, Store, Product
+from sqlalchemy.orm import Session
 from auth import router as auth_router
 from subscriptions import router as sub_router
 from api import router as api_router 
@@ -66,7 +67,7 @@ def root():
 def health_check():
     return {"status": "healthy", "architecture": "FastAPI Async Core Engine"}
 @app.post("/analyze")
-async def analyze_store(data: dict):
+async def analyze_store(data: dict, db: Session = Depends(get_db)):
   url = data.get("url", "")
 
   if not url:
@@ -90,8 +91,33 @@ async def analyze_store(data: dict):
         saturation_data={"competition": "LOW"},
         ad_data={"winning": True},
         price_data={"price": 29.99}
-    )
-  return {
+ )
+ # Database Save Logic
+ store = db.query(Store).filter(Store.domain == url).first()
+ if not store:
+        store = Store(
+            domain=url,
+            platform=discovery_res.get("platform", "Shopify"),
+            niche=discovery_res.get("niche", "General")
+        )
+        db.add(store)
+        db.commit()
+        db.refresh(store)
+
+ if extracted_products:
+        for p in extracted_products:
+            existing_prod = db.query(Product).filter(Product.url == p.get("url"), Product.store_id == store.id).first()
+            if not existing_prod:
+                new_prod = Product(
+                    store_id=store.id,
+                    title=p.get("title", "Unknown Product"),
+                    url=p.get("url", ""),
+                    image_url=p.get("image_url", ""),
+                    selling_price=float(p.get("price", 0.0) or 0.0)
+                )
+                db.add(new_prod)
+        db.commit()
+    return {
         "status": "success",
         "url": url,
         "platform": discovery_res.get("platform", "Custom/Other"),
