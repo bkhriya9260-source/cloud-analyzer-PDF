@@ -88,7 +88,7 @@ async def analyze_store(data: dict):
         ad_data={"winning": True},
         price_data={"price": 29.99}
     )
-    return {
+  return {
         "status": "success",
         "url": url,
         "platform": discovery_res.get("platform", "Custom/Other"),
