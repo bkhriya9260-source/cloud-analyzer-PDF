@@ -99,7 +99,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         price_data={"price": 29.99}
  )
  # Database Save Logic
- store = db.query(Store).filter(Store.domain == url).first()
+   store = db.query(Store).filter(Store.domain == url).first()
  if not store:
         store = Store(
             domain=url,
@@ -109,8 +109,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         db.add(store)
         db.commit()
         db.refresh(store)
-
- if extracted_products:
+if extracted_products:
         for p in extracted_products:
             existing_prod = db.query(Product).filter(Product.url == p.get("url"), Product.store_id == store.id).first()
             if not existing_prod:
@@ -118,21 +117,12 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
                     store_id=store.id,
                     title=p.get("title", "Unknown Product"),
                     url=p.get("url", ""),
-                    image_u# Database Save Logic
-    store = db.query(Store).filter(Store.domain == url).first()
-if not store:
-        store = Store(
-            domain=url,
-            platform=discovery_res.get("platform"),
-            niche=discovery_res.get("niche")
-        )
-        db.add(store)
-        db.commit()
-        db.refresh(store)rl=p.get("image_url", ""),
+                    image_url=p.get("image_url", ""),
                     selling_price=float(p.get("price", 0.0) or 0.0)
                 )
                 db.add(new_prod)
-        db.commit()
+                db.commit()
+ 
     return {
         "status": "success",
         "url": url,
