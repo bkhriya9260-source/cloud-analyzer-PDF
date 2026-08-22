@@ -14,6 +14,7 @@ from product_search import ProductSearchEngine
 from ai_reports import AIReportEngine
 from store_discovery import StoreDiscovery
 from profit_engine import ProfitEngine
+from trend_engine import TrendEngine
 def validate_target_url(url: str):
     parsed = urlparse(url)
     if parsed.scheme not in ["http", "https"]:
@@ -137,7 +138,10 @@ async def calculate_profit(data: dict):
         estimated_ad_cpa=float(data.get("estimated_ad_cpa", 0.0))
     )
     return result  
-   
+   @app.get("/analyze-trend/{product_id}")
+async def analyze_product_trend(product_id: int, db: Session = Depends(get_db)):
+    engine = TrendEngine(db=db)
+    return engine.analyze_product_momentum(product_id=product_id)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
