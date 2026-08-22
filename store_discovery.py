@@ -44,4 +44,4 @@ class StoreDiscovery:
             "platform": platform,
             "niche": niche,
             "store_title": info.get("title")
-        }-
+        }
