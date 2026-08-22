@@ -1,3 +1,4 @@
+from product_extractor import ProductExtractor
 import ipaddress
 from urllib.parse import urlparse
 from fastapi import HTTPException
@@ -76,6 +77,8 @@ async def analyze_store(data: dict):
 
   search_engine = ProductSearchEngine()
   discovery = StoreDiscovery()
+  extractor = ProductExtractor()
+  extracted_products = await extractor.extract_shopify_products(url)
   discovery_res = await discovery.identify_platform_and_niche(url)
   results = search_engine.search_products(url) 
     
@@ -94,7 +97,8 @@ async def analyze_store(data: dict):
         "platform": discovery_res.get("platform", "Custom/Other"),
         "niche": discovery_res.get("niche", "General E-Commerce"),
         "search_data": results,
-        "ai_report": report
+        "ai_report": report,
+        "extracted_products": extracted_products
     }
     
    
