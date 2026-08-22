@@ -162,6 +162,18 @@ async def get_saturation_analysis(product_id: int, db: Session = Depends(get_db)
 async def get_opportunity_score(product_id: int, db: Session = Depends(get_db)):
     engine = OpportunityEngine(db=db)
     return engine.calculate_score(product_id=product_id)
+@app.post("/search-products")
+async def search_products(data: dict, db: Session = Depends(get_db)):
+    engine = ProductSearchEngine(db=db)
+    results = engine.search_products(
+        query=data.get("query"),
+        min_price=data.get("min_price"),
+        max_price=data.get("max_price"),
+        category=data.get("category"),
+        min_margin=data.get("min_margin"),
+        limit=data.get("limit", 20)
+    )
+    return {"status": "success", "results": results}
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
