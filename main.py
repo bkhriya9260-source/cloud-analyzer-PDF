@@ -18,7 +18,7 @@ from trend_engine import TrendEngine
 from price_intelligence import PriceIntelligenceEngine
 from competitor_engine import CompetitorEngine
 from saturation_engine import SaturationEngine
-from opportunity_score import OpportunityEngine
+from opportunity_score import OpportunityScoreEngine
 
 
 def validate_target_url(url: str):
@@ -182,7 +182,7 @@ async def get_saturation_analysis(product_id: int, db: Session = Depends(get_db)
 
 @app.get("/opportunity-score/{product_id}")
 async def get_opportunity_score(product_id: int, db: Session = Depends(get_db)):
-    engine = OpportunityEngine(db=db)
+    engine = OpportunityScoreEngine()
     return engine.calculate_score(product_id=product_id)
 
 
