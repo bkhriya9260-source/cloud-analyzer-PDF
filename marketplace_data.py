@@ -8,16 +8,32 @@ class MarketplaceData:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
-    async def get_amazon_product_signal(self, keyword: str) -> Dict[str, Any]:
+   async def get_amazon_product_signal(self, keyword: str) -> Dict[str, Any]:
         encoded_kw = keyword.replace(" ", "+")
         search_url = f"https://www.amazon.com/s?k={encoded_kw}"
         
-        return {
-            "marketplace": "Amazon",
-            "search_keyword": keyword,
-            "search_url": search_url,
-            "status": "Ready for Proxy Processing"
-        }
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            try:
+                res = await client.get(search_url, headers=self.headers)
+                if res.status_code == 200:
+                    soup = BeautifulSoup(res.text, "html.parser")
+                    items = soup.find_all("div", {"data-component-type": "s-search-result"}, limit=5)
+                    
+                    extracted = []
+                    for item in items:
+                        title_el = item.find("h2", {"class": "a-size-base-plus"})
+                        price_whole = item.find("span", {"class": "a-price-whole"})
+                        
+                        if title_el:
+                            extracted.append({
+                                "title": title_el.get_text(strip=True),
+                                "price": price_whole.get_text(strip=True) if price_whole else "N/A"
+                            })
+                    return {"marketplace": "Amazon", "results": extracted}
+            except Exception as e:
+                print(f"Amazon Scraper Error: {e}")
+                
+        return {"marketplace": "Amazon", "results": []}
 
     async def get_ebay_product_signal(self, keyword: str) -> Dict[str, Any]:
         encoded_kw = keyword.replace(" ", "+")
@@ -26,7 +42,32 @@ class MarketplaceData:
         async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
             try:
                 res = await client.get(search_url, headers=self.headers)
+                if res.staasync def get_amazon_product_signal(self, keyword: str) -> Dict[str, Any]:
+        encoded_kw = keyword.replace(" ", "+")
+        search_url = f"https://www.amazon.com/s?k={encoded_kw}"
+        
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            try:
+                res = await client.get(search_url, headers=self.headers)
                 if res.status_code == 200:
+                    soup = BeautifulSoup(res.text, "html.parser")
+                    items = soup.find_all("div", {"data-component-type": "s-search-result"}, limit=5)
+                    
+                    extracted = []
+                    for item in items:
+                        title_el = item.find("h2", {"class": "a-size-base-plus"})
+                        price_whole = item.find("span", {"class": "a-price-whole"})
+                        
+                        if title_el:
+                            extracted.append({
+                                "title": title_el.get_text(strip=True),
+                                "price": price_whole.get_text(strip=True) if price_whole else "N/A"
+                            })
+                    return {"marketplace": "Amazon", "results": extracted}
+            except Exception as e:
+                print(f"Amazon Scraper Error: {e}")
+                
+        return {"marketplace": "Amazon", "results": []}atus_code == 200:
                     soup = BeautifulSoup(res.text, "html.parser")
                     items = soup.find_all("div", {"class": "s-item__info"}, limit=5)
                     
