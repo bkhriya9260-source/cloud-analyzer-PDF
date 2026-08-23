@@ -15,7 +15,7 @@ from ai_reports import AIReportEngine
 from store_discovery import StoreDiscovery
 from profit_engine import ProfitEngine
 from trend_engine import TrendEngine
-from price_intelligence import PriceIntelligence
+from price_intelligence import PriceIntelligenceEngine
 from competitor_engine import CompetitorEngine
 from saturation_engine import SaturationEngine
 from opportunity_score import OpportunityEngine
@@ -164,7 +164,7 @@ async def analyze_product_trend(product_id: int, db: Session = Depends(get_db)):
 
 @app.get("/price-intelligence/{product_id}")
 async def get_price_intelligence(product_id: int, db: Session = Depends(get_db)):
-    engine = PriceIntelligence(db=db)
+    engine = PriceIntelligenceEngine(db=db)
     return engine.analyze_market_pricing(product_id=product_id)
 
 
