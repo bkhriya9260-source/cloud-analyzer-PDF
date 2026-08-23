@@ -101,7 +101,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
  # Database Save Logic
  store = db.query(Store).filter(Store.domain == url).first()
  if not store:
-        store = Store(
+      store = Store(
             domain=url,
             platform=discovery_res.get("platform"),
             niche=discovery_res.get("niche")
@@ -109,7 +109,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         db.add(store)
         db.commit()
         db.refresh(store)
-if extracted_products:
+ if extracted_products:
         for p in extracted_products:
             existing_prod = db.query(Product).filter(Product.url == p.get("url"), Product.store_id == store.id).first()
             if not existing_prod:
