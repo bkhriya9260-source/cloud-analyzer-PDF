@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 class AIReportEngine:
     def __init__(self):
@@ -16,13 +16,13 @@ class AIReportEngine:
         """Generates comprehensive 1-click executive intelligence reports with final AI Verdict"""
         
         score = opportunity_data.get("overall_opportunity_score", 0)
-        
+
         if score >= 80:
             verdict = "🟢 TEST"
-            recommendation = "High winning potential. Low saturation with solid gross margin. Launch testing campaign immediately."
+            recommendation = "High winning potential. Low saturation with solid gross margin. Launch video ads ASAP."
         elif score >= 55:
             verdict = "🟡 WATCH"
-            recommendation = "Moderate opportunity. Monitor competitor ad volume and wait for supplier cost drops before scaling."
+            recommendation = "Moderate opportunity. Monitor competitor ad volume and wait for price stability."
         else:
             verdict = "🔴 AVOID"
             recommendation = "High market saturation or razor-thin gross margins. High risk of negative ROAS."
@@ -52,6 +52,74 @@ class AIReportEngine:
             },
             "risk_assessment": [
                 "Supplier shipping delay risk" if profit_data.get("shipping_cost", 0) > 10 else "Low shipping complexity",
-                "Ad fatigue risk due to long-running competitor creatives" if ad_data.get("creative_lifecycle_stage") == "HIGH_FATIGUE_RISK" else "Fresh creative angle viable"
+                "Ad fatigue risk due to long-running competitor creatives" if ad_data.get("creative_lifecycle_stage") == "HIGH_FATIGUE_RISK" else "Fresh creative angle gap available"
             ]
+        }
+
+
+class ReportGenerator:
+    def __init__(self):
+        pass
+
+    def generate_comprehensive_report(self, consolidated_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates structured executive AI reports using actual signals from 
+        product, trend, profit, saturation, and ad intelligence engines.
+        """
+        product_info = consolidated_data.get("product_info", {})
+        trend_data = consolidated_data.get("trend_data", {})
+        profit_data = consolidated_data.get("profit_data", {})
+        competitor_data = consolidated_data.get("competitor_data", {})
+        saturation_data = consolidated_data.get("saturation_data", {})
+        ad_insights = consolidated_data.get("ad_insights", {})
+
+        title = product_info.get("title", "Target Product")
+        opp_score = consolidated_data.get("opportunity_score", 50)
+        net_margin = profit_data.get("net_margin_percent", 0)
+
+        exec_summary = (
+            f"Analysis for '{title}' shows an overall Opportunity Score of {opp_score}/100. "
+            f"Estimated Net Profit Margin is currently standing at {net_margin}%."
+        )
+
+        trend_status = trend_data.get("trend_status", "STABLE")
+        opportunity_desc = (
+            f"Market demand direction is {trend_status}. "
+            f"Tracked ad signals show active scaling formats, indicating strong buyer interest."
+        )
+
+        strengths = []
+        weaknesses = []
+
+        if net_margin >= 30:
+            strengths.append("High Profit Margin potential (>30%).")
+        else:
+            weaknesses.append("Tight Profit Margins (<30%), requiring strict ad-spend control.")
+
+        if saturation_data.get("saturation_level") == "LOW":
+            strengths.append("Low market saturation allows for easier ad penetration.")
+        else:
+            weaknesses.append("High seller competition in current ad channels.")
+
+        risks = [
+            "Ad fatigue risk if marketing creatives are not refreshed frequently.",
+            "Supplier fulfillment delay during peak testing scale."
+        ]
+
+        top_ad_format = ad_insights.get("metrics", {}).get("top_performing_format", "UGC Video")
+        recommended_strategy = (
+            f"Focus testing on {top_ad_format} ad creatives. "
+            f"Target hook angles centered around problem-solving and immediate social proof."
+        )
+
+        return {
+            "status": "success",
+            "report": {
+                "executive_summary": exec_summary,
+                "market_opportunity": opportunity_desc,
+                "strengths": strengths if strengths else ["Moderate product viability."],
+                "weaknesses": weaknesses if weaknesses else ["Standard competition levels."],
+                "risks": risks,
+                "recommended_strategy": recommended_strategy
+            }
         }
