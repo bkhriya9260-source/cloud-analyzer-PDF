@@ -99,7 +99,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         price_data={"price": 29.99}
  )
  # Database Save Logic
-   store = db.query(Store).filter(Store.domain == url).first()
+ store = db.query(Store).filter(Store.domain == url).first()
  if not store:
         store = Store(
             domain=url,
