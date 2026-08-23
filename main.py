@@ -122,7 +122,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
                 )
                 db.add(new_prod)
                 db.commit()
-return {
+ return {
         "status": "success",
         "url": url,
         "platform": discovery_res.get("platform", "Custom/Other"),
