@@ -201,13 +201,63 @@ async def search_products(data: dict, db: Session = Depends(get_db)):
     return {"status": "success", "results": results}
 
 
-# Serve index.html UI at root "/"
+# Serve UI Dashboard directly at root "/"
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>index.html file not found in root repository!</h1>"
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cloud Web Analyzer - SaaS Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-950 text-white font-sans antialiased min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
+            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3">
+                Cloud Web Analyzer 🚀
+            </h1>
+            <p class="text-slate-400 mb-6 text-sm">
+                Multi-Page SaaS Auditor Engine & Intelligence Core is live and running.
+            </p>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Store URL</label>
+                    <input type="text" id="targetUrl" placeholder="https://example.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <button onclick="runAudit()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3 rounded-lg shadow-lg transition duration-200">
+                    Launch Comprehensive Analysis ⚡
+                </button>
+            </div>
+            <div id="resultBox" class="mt-6 hidden text-left bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto"></div>
+        </div>
+
+        <script>
+            async function runAudit() {
+                const url = document.getElementById('targetUrl').value;
+                const resultBox = document.getElementById('resultBox');
+                if(!url) { alert('Please enter a URL'); return; }
+                
+                resultBox.classList.remove('hidden');
+                resultBox.innerHTML = "Analyzing target store data...";
+                
+                try {
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url })
+                    });
+                    const data = await response.json();
+                    resultBox.innerHTML = JSON.stringify(data, null, 2);
+                } catch(err) {
+                    resultBox.innerHTML = "Error: " + err.message;
+                }
+            }
+        </script>
+    </body>
+    </html>
+    """
 
 
 if __name__ == "__main__":
