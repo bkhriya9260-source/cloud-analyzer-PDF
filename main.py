@@ -3,7 +3,8 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-
+from fastapi.responses import HTMLResponse
+import os
 from config import settings
 from database import init_db, get_db, Store, Product
 from auth import router as auth_router
@@ -198,6 +199,15 @@ async def search_products(data: dict, db: Session = Depends(get_db)):
         limit=data.get("limit", 20)
     )
     return {"status": "success", "results": results}
+
+
+# Serve index.html UI at root "/"
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>index.html file not found in root repository!</h1>"
 
 
 if __name__ == "__main__":
