@@ -67,13 +67,7 @@ app.include_router(sub_router, prefix=settings.API_V1_PREFIX)
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
-@app.get("/")
-def root():
-    return {
-        "message": "E-Commerce Intelligence Core Engine Online",
-        "documentation": "/docs",
-        "version": "1.0.0"
-    }
+
 
 
 @app.get("/health")
