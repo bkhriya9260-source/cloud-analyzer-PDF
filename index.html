@@ -228,13 +228,13 @@
                 document.getElementById('results').style.display = 'block';
 
                 const domainClean = (data.domain || url).replace('https://','').replace('http://','').replace('www.','');
-                document.getElementById('resTitle').innerText = data.product_title || 'Store Analytics';
-                document.getElementById('resSub').innerText = `Domain: ${domainClean} | Vendor: ${data.vendor || 'N/A'}`;
+                
+               document.getElementById('resTitle').innerText = (data.extracted_products && data.extracted_products[0]) ? data.extracted_products[0].title : (data.url || 'Store Analysis');
 
-                document.getElementById('resRevenue').innerText = `$${(data.est_monthly_revenue || 0).toLocaleString()}`;
-                document.getElementById('resProfit').innerText = `$${(data.est_monthly_profit || 0).toLocaleString()}`;
-                document.getElementById('resPrice').innerText = `$${data.price || '0.00'}`;
-                document.getElementById('resCogs').innerText = `$${data.est_cogs || '0.00'}`;
+               
+               document.getElementById('resRevenue').innerText = data.platform || 'Shopify';
+                document.getElementById('resProfit').innerText = data.niche || 'General E-Commerce';
+                document.getElementById('resPrice').innerText = "$" + ((data.extracted_products && data.extracted_products[0]) ? data.extracted_products[0].price : "0.00");
 
                 document.getElementById('resAdAngle').innerText = data.tiktok_reels_ad_angle || "Hook -> Problem -> Solution CTA";
                 document.getElementById('metaAdLink').href = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&q=${domainClean}`;
@@ -245,9 +245,9 @@
                 ['Shopify Engine', 'Loox Reviews', 'Klaviyo Email', 'Meta Pixel'].forEach(app => {
                     techStackDiv.innerHTML += `<span class="badge">${app}</span>`;
                 });
-
-                document.getElementById('resPersona').innerText = data.target_buyer_persona || "US Impulse Buyers (18-35)";
-
+                
+                document.getElementById('resPersona').innerText = data.ai_report ? data.ai_report.summary : 'Analysis compiled successfully.';
+               
                 const searchKeyword = encodeURIComponent(data.product_title || domainClean);
                 document.getElementById('resSupplierLinks').innerHTML = `
                     <a href="https://www.aliexpress.com/wholesale?SearchText=${searchKeyword}" target="_blank" class="btn-link">📦 AliExpress</a>
