@@ -86,7 +86,7 @@ async def analyze_store(data: dict, db: Session = Depends(get_db)):
         return {"status": "error", "message": "Invalid URL scheme. Only http/https supported."}
 
     try:
-        search_engine = ProductSearchEngine() if 'ProductSearchEngine' in globals() else None
+        search_engine = ProductSearchEngine(db) if 'ProductSearchEngine' in globals() else None
         discovery = StoreDiscovery() if 'StoreDiscovery' in globals() else None
         extractor = ProductExtractor() if 'ProductExtractor' in globals() else None
         report_engine = AIReportEngine() if 'AIReportEngine' in globals() else None
