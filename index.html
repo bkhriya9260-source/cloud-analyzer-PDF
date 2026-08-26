@@ -226,7 +226,8 @@
 
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('results').style.display = 'block';
-
+                document.getElementById('results').innerHTML = `<div style="padding:20px; background:#0f172a; color:#fff; border-radius:8px;"><h3>Store Analysis Result</h3><p><b>Platform:</b> ${data.platform || 'Shopify'}</p><p><b>Niche:</b> ${data.niche || 'General'}</p><p><b>Summary:</b> ${data.ai_report ? data.ai_report.summary : 'Completed'}</p></div>`;
+                
                 const domainClean = (data.domain || url).replace('https://','').replace('http://','').replace('www.','');
                 
                document.getElementById('resTitle').innerText = (data.extracted_products && data.extracted_products[0]) ? data.extracted_products[0].title : (data.url || 'Store Analysis');
