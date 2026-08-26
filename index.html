@@ -226,35 +226,20 @@
 
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('results').style.display = 'block';
-                document.getElementById('results').innerHTML = `<div style="padding:20px; background:#0f172a; color:#fff; border-radius:8px;"><h3>Store Analysis Result</h3><p><b>Platform:</b> ${data.platform || 'Shopify'}</p><p><b>Niche:</b> ${data.niche || 'General'}</p><p><b>Summary:</b> ${data.ai_report ? data.ai_report.summary : 'Completed'}</p></div>`;
-                
-                const domainClean = (data.domain || url).replace('https://','').replace('http://','').replace('www.','');
-                
-               document.getElementById('resTitle').innerText = (data.extracted_products && data.extracted_products[0]) ? data.extracted_products[0].title : (data.url || 'Store Analysis');
-
-               
-               document.getElementById('resRevenue').innerText = data.platform || 'Shopify';
-                document.getElementById('resProfit').innerText = data.niche || 'General E-Commerce';
-                document.getElementById('resPrice').innerText = "$" + ((data.extracted_products && data.extracted_products[0]) ? data.extracted_products[0].price : "0.00");
-
-                document.getElementById('resAdAngle').innerText = data.tiktok_reels_ad_angle || "Hook -> Problem -> Solution CTA";
-                document.getElementById('metaAdLink').href = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&q=${domainClean}`;
-                document.getElementById('tiktokAdLink').href = `https://ads.tiktok.com/business/creativecenter/inspiration/topads/pad/en?period=7`;
-
-                const techStackDiv = document.getElementById('resTechStack');
-                techStackDiv.innerHTML = '';
-                ['Shopify Engine', 'Loox Reviews', 'Klaviyo Email', 'Meta Pixel'].forEach(app => {
-                    techStackDiv.innerHTML += `<span class="badge">${app}</span>`;
-                });
-                
-                document.getElementById('resPersona').innerText = data.ai_report ? data.ai_report.summary : 'Analysis compiled successfully.';
-               
-                const searchKeyword = encodeURIComponent(data.product_title || domainClean);
-                document.getElementById('resSupplierLinks').innerHTML = `
-                    <a href="https://www.aliexpress.com/wholesale?SearchText=${searchKeyword}" target="_blank" class="btn-link">📦 AliExpress</a>
-                    <a href="https://cjdropshipping.com/list/product-list.html?search=${searchKeyword}" target="_blank" class="btn-link">🚀 CJ Dropshipping</a>
-                    <a href="https://s.1688.com/selloffer/offer_search.htm?keywords=${searchKeyword}" target="_blank" class="btn-link">🏭 1688 Supplier</a>
-                `;
+               document.getElementById('results').innerHTML = `
+        <div style="padding:20px; background:#0f172a; color:#fff; border-radius:8px; border:1px solid #334155;">
+          <h3 style="color:#38bdf8; margin-top:0;">Store Analysis Result</h3>
+          <p><b>Platform:</b> ${data.platform || 'Shopify'}</p>
+          <p><b>Niche:</b> ${data.niche || 'General E-Commerce'}</p>
+          <p><b>Executive Summary:</b> ${data.ai_report ? data.ai_report.summary : 'Completed'}</p>
+          ${data.extracted_products && data.extracted_products.length > 0 ? `
+            <div style="margin-top:15px; padding-top:15px; border-top:1px solid #334155;">
+              <h4 style="color:#4ade80; margin:0 0 5px 0;">Product: ${data.extracted_products[0].title}</h4>
+              <p style="margin:0;">Price: $${data.extracted_products[0].price || '0.00'}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
             } catch(e) {
                 document.getElementById('loader').style.display = 'none';
                 alert("Error carrying out analysis: " + e.message);
