@@ -227,61 +227,773 @@ async def search_products(data: dict, db: Session = Depends(get_db)):
 # Serve UI Dashboard directly at root "/"
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cloud Web Analyzer - SaaS Dashboard</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-slate-950 text-white font-sans antialiased min-h-screen flex flex-col items-center justify-center p-6">
-        <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
-            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-3">
-                Cloud Web Analyzer 🚀
-            </h1>
-            <p class="text-slate-400 mb-6 text-sm">
-                Multi-Page SaaS Auditor Engine & Intelligence Core is live and running.
-            </p>
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Store URL</label>
-                    <input type="text" id="targetUrl" placeholder="https://example.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
-                </div>
-                <button onclick="runAudit()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3 rounded-lg shadow-lg transition duration-200">
-                    Launch Comprehensive Analysis ⚡
-                </button>
+   return """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudAnalyzer AI — E-Commerce Store & Revenue Auditor</title>
+    <style>
+        :root { --bg-color: #0b0f19; --card-bg: #111827; --card-bg-2: #0d1117; --accent: #00f2fe; --accent-green: #10b981; --accent-orange: #f59e0b; --accent-red: #f87171; --text-main: #f9fafb; --text-sub: #9ca3af; --border: #1f2937; }
+        * { box-sizing: border-box; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
+        .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2.2rem; margin-bottom: 5px; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--text-sub); }
+        .search-card, .store-header-card, .info-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-sub); margin-bottom: 6px; font-weight: 600; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: #fff; font-size: 0.95rem; box-sizing: border-box; }
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%); border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-submit:disabled { opacity: 0.55; cursor: wait; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+        .metric-title { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 6px; }
+        .metric-value { font-size: 1.4rem; font-weight: bold; }
+        .text-green { color: var(--accent-green); }
+        .text-orange { color: var(--accent-orange); }
+        .text-red { color: var(--accent-red); }
+        .text-muted { color: var(--text-sub); font-size: 0.9rem; font-weight: 500; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; background: #374151; margin-right: 6px; margin-bottom: 6px; }
+        .btn-link { display: inline-block; padding: 10px 16px; background: #1f2937; border: 1px solid var(--accent); color: var(--accent); text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9rem; margin-right: 10px; margin-top: 10px; cursor: pointer; }
+        .btn-link.orange { border-color: var(--accent-orange); color: var(--accent-orange); }
+        .btn-link.green { border-color: var(--accent-green); color: var(--accent-green); }
+        .loader, .results-section, .page-view { display: none; }
+        .page-view.active { display: block; }
+        .loader.show { display: block; }
+
+        /* Navigation & Header */
+        .custom-nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #0d1117; border-bottom: 1px solid #30363d; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .custom-nav .logo-group { display: flex; align-items: center; gap: 10px; }
+        .custom-nav .logo { font-size: 20px; font-weight: 700; color: #58a6ff; cursor: pointer; }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #6b7280; display: inline-block; }
+        .live-dot.on { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+        .live-dot.off { background: var(--accent-red); box-shadow: 0 0 6px var(--accent-red); }
+        .nav-links { display: flex; flex-wrap: wrap; }
+        .custom-nav .nav-links a { color: #8b949e; text-decoration: none; margin: 0 10px; font-size: 14px; cursor: pointer; white-space: nowrap; }
+        .custom-nav .nav-links a:hover, .custom-nav .nav-links a.active { color: #fff; font-weight: 600; }
+        .auth-btn-group .btn { padding: 7px 15px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #30363d; }
+        .btn-login { background: transparent; color: #c9d1d9; margin-right: 8px; }
+        .btn-signup { background: #238636; color: #fff; border: none; }
+        .btn-logout { background: transparent; color: var(--accent-red); border: 1px solid #30363d; }
+
+        /* Auth Modal */
+        .auth-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 999; }
+        .auth-modal-overlay.show { display: flex; }
+        .auth-modal-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 25px; width: 320px; position: relative; }
+        .close-modal-btn { position: absolute; top: 10px; right: 15px; color: #8b949e; cursor: pointer; font-size: 18px; }
+        .auth-msg { font-size: 0.82rem; margin-top: 8px; display: none; padding: 8px 10px; border-radius: 6px; }
+        .auth-msg.show { display: block; }
+        .auth-msg.err { background: rgba(248,113,113,0.12); color: var(--accent-red); border: 1px solid rgba(248,113,113,0.3); }
+        .auth-msg.ok { background: rgba(16,185,129,0.12); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+
+        /* Product grid (search/analyze results) */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 10px; }
+        .product-card { background: var(--card-bg-2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color .15s ease; }
+        .product-card:hover { border-color: var(--accent); }
+        .product-card img { width: 100%; height: 140px; object-fit: cover; display: block; background: #0b0f19; }
+        .product-card .pbody { padding: 12px; }
+        .product-card .ptitle { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-card .pprice { color: var(--accent-orange); font-weight: 700; font-size: 0.95rem; }
+        .product-card .pavail { font-size: 0.65rem; padding: 2px 7px; border-radius: 20px; margin-left: 6px; }
+        .pavail.yes { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+        .pavail.no { background: rgba(248,113,113,0.15); color: var(--accent-red); }
+        .product-card .ptags { margin-top: 6px; }
+        .product-card .ptags .badge { font-size: 0.65rem; padding: 2px 6px; margin: 2px 3px 0 0; }
+        .product-card .pactions { margin-top: 10px; display: flex; gap: 6px; }
+        .product-card .pactions button { flex: 1; font-size: 0.72rem; padding: 6px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab-btn { background: #1f2937; border: 1px solid #374151; color: var(--text-sub); font-size: 0.8rem; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+
+        /* Raw data box */
+        .raw-box { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--text-sub); white-space: pre-wrap; word-break: break-word; max-height: 340px; overflow-y: auto; margin-top: 12px; }
+        .msg-inline { padding: 10px 14px; border-radius: 6px; font-size: 0.85rem; margin-top: 12px; display: none; }
+        .msg-inline.show { display: block; }
+        .msg-inline.err { background: rgba(248,113,113,0.1); color: var(--accent-red); border: 1px solid rgba(248,113,113,0.3); }
+        .msg-inline.ok { background: rgba(16,185,129,0.1); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+        .msg-inline.info { background: rgba(0,242,254,0.08); color: var(--accent); border: 1px solid rgba(0,242,254,0.25); }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); }
+
+        @media print {
+            .custom-nav, .search-card, .btn-submit, .auth-btn-group { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="custom-nav">
+        <div class="logo-group">
+            <div class="logo" onclick="switchPage('auditor')">CloudAnalyzer AI</div>
+            <span class="live-dot" id="liveDot" title="Backend status"></span>
+        </div>
+        <div class="nav-links">
+            <a onclick="switchPage('auditor')" id="nav-auditor" class="active">Auditor Engine</a>
+            <a onclick="switchPage('search')" id="nav-search">Search Products</a>
+            <a onclick="switchPage('intel')" id="nav-intel">Product Intel</a>
+            <a onclick="switchPage('competitor')" id="nav-competitor">Competitors</a>
+            <a onclick="switchPage('profit')" id="nav-profit">Profit Calculator</a>
+            <a onclick="switchPage('features')" id="nav-features">Features</a>
+            <a onclick="switchPage('pricing')" id="nav-pricing">Pricing</a>
+            <a onclick="switchPage('reports')" id="nav-reports">Reports</a>
+            <a onclick="switchPage('settings')" id="nav-settings">Settings</a>
+        </div>
+        <div class="auth-btn-group" id="authBtnGroup">
+            <button class="btn btn-login" onclick="openAuthModal('login')">Log In</button>
+            <button class="btn btn-signup" onclick="openAuthModal('signup')">Sign Up</button>
+        </div>
+    </header>
+
+    <!-- Login / Signup Pop-up Modal -->
+    <div class="auth-modal-overlay" id="authModal">
+        <div class="auth-modal-card">
+            <span class="close-modal-btn" onclick="closeAuthModal()">&times;</span>
+            <h3 id="authModalTitle" style="color:#58a6ff; margin-bottom: 15px;">Account Access</h3>
+            <input type="email" id="authEmail" placeholder="Enter Email" style="width:100%; padding:10px; margin-bottom:10px; background:#0d1117; border:1px solid #30363d; color:#fff; border-radius:4px;">
+            <input type="password" id="authPass" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#0d1117; border:1px solid #30363d; color:#fff; border-radius:4px;">
+            <button id="authSubmitBtn" style="width:100%; padding:10px; background:#238636; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="submitAuth()">Submit</button>
+            <div class="auth-msg" id="authMsg"></div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- 1. AUDITOR ENGINE PAGE (MAIN HOME) -->
+        <div id="page-auditor" class="page-view active">
+            <div class="header">
+                <h1>E-Commerce Store & Revenue Auditor</h1>
+                <p>Deep Analytics, Multi-Platform Scraper & Revenue Intelligence Engine</p>
             </div>
-            <div id="resultBox" class="mt-6 hidden text-left bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto"></div>
+
+            <div class="search-card">
+                <div class="input-group">
+                    <label>Target E-Commerce URL</label>
+                    <input type="text" id="storeUrl" placeholder="e.g. https://storename.com">
+                </div>
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>Platform</label>
+                        <select id="platform"><option>Auto-Detect Engine</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Audit Mode</label>
+                        <select id="auditMode"><option>Full Revenue & AI Deep Audit</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Market Benchmark</label>
+                        <select id="market"><option>United States (E-com Standard)</option></select>
+                    </div>
+                </div>
+                <button class="btn-submit" id="runAnalysisBtn" onclick="runAnalysis()">Launch Comprehensive Analysis 🚀</button>
+                <div class="msg-inline" id="auditorMsg"></div>
+            </div>
+
+            <div class="loader" id="loader" style="text-align: center; padding: 20px; color: #00f2fe;">Analyzing Store Data... Please wait.</div>
+
+            <div class="results-section" id="results">
+                <div class="store-header-card">
+                    <h2 id="resTitle">—</h2>
+                    <div id="resSub" style="color: #9ca3af;">—</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-title">Lead Product Price</div><div class="metric-value" id="resPrice">$0.00</div></div>
+                    <div class="metric-card"><div class="metric-title">Stock Status</div><div class="metric-value" id="resStock">—</div></div>
+                    <div class="metric-card"><div class="metric-title">Products Found</div><div class="metric-value text-green" id="resCount">0</div></div>
+                    <div class="metric-card"><div class="metric-title">Variants (lead product)</div><div class="metric-value text-orange" id="resVariants">—</div></div>
+                </div>
+
+                <div class="info-card">
+                    <h3>1. Competitor & Ad Spy Data</h3>
+                    <p style="font-size: 0.9rem; color: #9ca3af;">Real, live-generated links — not a lookup guess. Open them to inspect this store's actual running ads.</p>
+                    <div><strong>Detected Product Tags:</strong> <span id="resAdAngle" class="text-muted">—</span></div>
+                    <div style="margin-top: 10px;">
+                        <a id="metaAdLink" href="#" target="_blank" rel="noopener" class="btn-link">🔍 Open Meta Ad Library</a>
+                        <a id="tiktokAdLink" href="#" target="_blank" rel="noopener" class="btn-link">🎵 Open TikTok Ad Center</a>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>2. Product & Platform Intelligence</h3>
+                    <div><strong>Platform Detected:</strong> <span id="resPlatform" style="color: #00f2fe;">—</span></div>
+                    <div style="margin-top: 6px;"><strong>Niche:</strong> <span id="resNiche" class="text-muted">—</span></div>
+                    <div style="margin-top: 10px;"><strong>Tech Stack (via Competitor Analysis):</strong>
+                        <div id="resTechStack" class="text-muted" style="margin-top:6px;">Not fetched yet — <span style="color:var(--accent); cursor:pointer;" onclick="runTechStackLookup()">run tech stack check</span></div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>3. AI Executive Summary</h3>
+                    <div id="resPersona" class="text-muted">Not provided by current scan.</div>
+                </div>
+
+                <div class="info-card">
+                    <h3>4. Deep Supply Chain & Supplier Sourcing</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-sub);">Live search links generated from the lead product's real title.</p>
+                    <div id="resSupplierLinks"></div>
+                </div>
+
+                <div class="info-card">
+                    <h3>5. All Extracted Products</h3>
+                    <div class="product-grid" id="resProductGrid"></div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn-submit" style="max-width: 300px; background: #10b981;" onclick="downloadReport('pdf')">📥 Save Full Report as PDF</button>
+                    <button class="btn-submit" style="max-width: 200px; background: #374151; margin-left: 10px;" onclick="downloadReport('json')">📄 Export JSON</button>
+                </div>
+            </div>
         </div>
 
-        <script>
-            async function runAudit() {
-                const url = document.getElementById('targetUrl').value;
-                const resultBox = document.getElementById('resultBox');
-                if(!url) { alert('Please enter a URL'); return; }
-                
-                resultBox.classList.remove('hidden');
-                resultBox.innerHTML = "Analyzing target store data...";
-                
-                try {
-                    const response = await fetch('/analyze', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: url })
-                    });
-                    const data = await response.json();
-                    resultBox.innerHTML = JSON.stringify(data, null, 2);
-                } catch(err) {
-                    resultBox.innerHTML = "Error: " + err.message;
-                }
-            }
-        </script>
-    </body>
-    </html>
-    """
+        <!-- 2. SEARCH PRODUCTS -->
+        <div id="page-search" class="page-view">
+            <div class="header"><h1>Search Products</h1><p>Query across scraped / indexed product data</p></div>
+            <div class="search-card">
+                <div class="input-group">
+                    <label>Search Query</label>
+                    <input type="text" id="searchQuery" placeholder="e.g. running leggings">
+                </div>
+                <button class="btn-submit" id="searchBtn" onclick="runSearch()">Search 🔎</button>
+                <div class="msg-inline" id="searchMsg"></div>
+            </div>
+            <div class="loader" id="searchLoader" style="text-align:center; padding:20px; color:#00f2fe;">Searching…</div>
+            <div id="searchResultsWrap" style="display:none;">
+                <div class="info-card">
+                    <h3>Results <span style="float:right; cursor:pointer; color:var(--accent); font-size:0.8rem;" onclick="toggleRaw('searchRaw')">view raw JSON</span></h3>
+                    <div class="raw-box" id="searchRaw" style="display:none;"></div>
+                    <div class="product-grid" id="searchGrid"></div>
+                </div>
+            </div>
+        </div>
 
+        <!-- 3. PRODUCT INTEL -->
+        <div id="page-intel" class="page-view">
+            <div class="header"><h1>Product Intelligence</h1><p>Trend, price, saturation & opportunity — per product ID</p></div>
+            <div class="search-card">
+                <div class="input-group">
+                    <label>Product ID</label>
+                    <input type="text" id="intelProductId" placeholder="e.g. 6806579445962">
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-intel="trend" onclick="setIntelTab('trend', this)">Trend</button>
+                    <button class="tab-btn" data-intel="price" onclick="setIntelTab('price', this)">Price Intelligence</button>
+                    <button class="tab-btn" data-intel="saturation" onclick="setIntelTab('saturation', this)">Saturation</button>
+                    <button class="tab-btn" data-intel="opportunity" onclick="setIntelTab('opportunity', this)">Opportunity Score</button>
+                </div>
+                <button class="btn-submit" id="intelBtn" onclick="runIntel()">Run Check</button>
+                <div class="msg-inline" id="intelMsg"></div>
+            </div>
+            <div class="loader" id="intelLoader" style="text-align:center; padding:20px; color:#00f2fe;">Fetching intelligence…</div>
+            <div class="info-card" id="intelResultCard" style="display:none;">
+                <h3>Result</h3>
+                <div class="raw-box" id="intelOut"></div>
+            </div>
+        </div>
+
+        <!-- 4. COMPETITOR ANALYSIS -->
+        <div id="page-competitor" class="page-view">
+            <div class="header"><h1>Competitor Analysis</h1><p>Ad spy links + tech stack detection for any store</p></div>
+            <div class="search-card">
+                <div class="input-group">
+                    <label>Store ID / Domain</label>
+                    <input type="text" id="competitorId" placeholder="e.g. gymshark.com">
+                </div>
+                <button class="btn-submit" id="competitorBtn" onclick="runCompetitor()">Scan ▲</button>
+                <div class="msg-inline" id="competitorMsg"></div>
+            </div>
+            <div class="loader" id="competitorLoader" style="text-align:center; padding:20px; color:#00f2fe;">Pulling competitor data…</div>
+            <div class="info-card" id="competitorResultCard" style="display:none;">
+                <h3>Result</h3>
+                <div class="raw-box" id="competitorOut"></div>
+            </div>
+        </div>
+
+        <!-- 5. PROFIT CALCULATOR -->
+        <div id="page-profit" class="page-view">
+            <div class="header"><h1>Profit Calculator</h1><p>Model your margins instantly, confirmed against the backend</p></div>
+            <div class="search-card">
+                <div class="options-grid">
+                    <div class="input-group"><label>Product Cost ($)</label><input type="number" id="pCost" placeholder="6.50"></div>
+                    <div class="input-group"><label>Selling Price ($)</label><input type="number" id="pSell" placeholder="24.99"></div>
+                    <div class="input-group"><label>Shipping Cost ($)</label><input type="number" id="pShip" placeholder="2.00"></div>
+                    <div class="input-group"><label>Ad Spend / Unit ($)</label><input type="number" id="pAd" placeholder="4.00"></div>
+                    <div class="input-group"><label>Platform Fee (%)</label><input type="number" id="pFee" placeholder="2.9"></div>
+                </div>
+                <button class="btn-submit" id="profitBtn" onclick="runProfitCalc()">Calculate Profit</button>
+                <div class="msg-inline" id="profitMsg"></div>
+            </div>
+            <div class="loader" id="profitLoader" style="text-align:center; padding:20px; color:#00f2fe;">Confirming with backend…</div>
+            <div class="metrics-grid" id="profitStats" style="display:none;">
+                <div class="metric-card"><div class="metric-title">Net Profit / Unit</div><div class="metric-value text-green" id="rNetProfit">—</div></div>
+                <div class="metric-card"><div class="metric-title">Margin</div><div class="metric-value" id="rMargin">—</div></div>
+                <div class="metric-card"><div class="metric-title">Total Cost / Unit</div><div class="metric-value text-orange" id="rTotalCost">—</div></div>
+                <div class="metric-card"><div class="metric-title">Break-even Ad Units</div><div class="metric-value" id="rBreakeven">—</div></div>
+            </div>
+            <div class="info-card" id="profitRawCard" style="display:none;">
+                <h3>Backend Confirmation <span style="float:right; cursor:pointer; color:var(--accent); font-size:0.8rem;" onclick="toggleRaw('profitRaw')">view raw JSON</span></h3>
+                <div class="raw-box" id="profitRaw" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- 6. FEATURES ROUTE -->
+        <div id="page-features" class="page-view">
+            <div class="info-card">
+                <h2 style="color: var(--accent);">Platform Features</h2>
+                <p>• Multi-platform E-Commerce Data Scraping (Shopify, WooCommerce, Custom)</p>
+                <p>• Live Meta Ad Library & TikTok Creative Center link generation per store</p>
+                <p>• Real supplier search links (AliExpress, CJ Dropshipping, 1688) from actual product titles</p>
+                <p>• Product Intelligence: trend, price intelligence, saturation & opportunity scoring</p>
+                <p>• Profit Calculator with instant local math + backend confirmation</p>
+                <p>• JSON export and printable PDF report of any audit</p>
+            </div>
+        </div>
+
+        <!-- 7. PRICING ROUTE -->
+        <div id="page-pricing" class="page-view">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Starter Plan</h3>
+                    <div class="metric-value">$29 / mo</div>
+                    <p style="color: var(--text-sub);">Up to 50 Store Audits / mo</p>
+                </div>
+                <div class="metric-card" style="border-color: var(--accent);">
+                    <h3 style="color: var(--accent);">Pro Agency</h3>
+                    <div class="metric-value">$99 / mo</div>
+                    <p style="color: var(--text-sub);">Unlimited Audits + PDF Exports</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. REPORTS ROUTE -->
+        <div id="page-reports" class="page-view">
+            <div class="info-card">
+                <h2>Generated Client Reports</h2>
+                <p style="color: var(--text-sub);">Reports are generated live from your last audit — run an analysis first, then export from the Auditor Engine page.</p>
+                <div id="reportsHistory" class="text-muted">No audits run yet this session.</div>
+            </div>
+        </div>
+
+        <!-- 9. SETTINGS ROUTE -->
+        <div id="page-settings" class="page-view">
+            <div class="info-card">
+                <h2>Account & API Settings</h2>
+                <div class="input-group">
+                    <label>Backend URL</label>
+                    <input type="text" id="apiBaseInput" value="https://cloud-analyzer-pdf.onrender.com">
+                </div>
+                <div class="input-group">
+                    <label>Session Token</label>
+                    <input type="text" id="sessionTokenView" value="Not logged in" readonly>
+                </div>
+                <p style="color: var(--text-sub); font-size: 0.85rem;">Token is kept in memory for this tab only and clears on refresh — log in again after reloading.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentAnalysisResult = null;
+        let currentLeadProductTitle = null;
+        let lastStoreDomain = null;
+        let authMode = 'login';
+        let AUTH_TOKEN = null;
+        let auditCount = 0;
+        let activeIntelTab = 'trend';
+
+        function apiBase() {
+            const v = document.getElementById('apiBaseInput');
+            return (v && v.value.trim()) || 'https://cloud-analyzer-pdf.onrender.com';
+        }
+
+        // ---------- Page routing ----------
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            const targetPage = document.getElementById('page-' + pageId);
+            const targetNav = document.getElementById('nav-' + pageId);
+            if (targetPage) targetPage.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+        }
+
+        // ---------- Generic API helper ----------
+        async function apiCall(path, opts = {}) {
+            const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+            if (AUTH_TOKEN) headers['Authorization'] = 'Bearer ' + AUTH_TOKEN;
+            let res, data;
+            try {
+                res = await fetch(apiBase() + path, Object.assign({}, opts, { headers }));
+            } catch (e) {
+                throw new Error('Network error — backend unreachable.');
+            }
+            try { data = await res.json(); } catch (e) { data = {}; }
+            if (!res.ok && !data.status) { data.status = 'error'; data.message = data.detail || ('HTTP ' + res.status); }
+            data.__httpStatus = res.status;
+            return data;
+        }
+
+        function showMsg(id, type, text) {
+            const el = document.getElementById(id);
+            el.className = 'msg-inline show ' + type;
+            el.textContent = text;
+        }
+        function clearMsg(id) {
+            const el = document.getElementById(id);
+            el.className = 'msg-inline';
+            el.textContent = '';
+        }
+        function toggleRaw(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ---------- Health check ----------
+        async function checkHealth() {
+            const dot = document.getElementById('liveDot');
+            try {
+                const data = await apiCall('/health', { method: 'GET' });
+                dot.className = 'live-dot ' + (data.__httpStatus === 200 ? 'on' : 'off');
+            } catch (e) {
+                dot.className = 'live-dot off';
+            }
+        }
+        checkHealth();
+        setInterval(checkHealth, 20000);
+
+        // ---------- Auditor Engine ----------
+        function productCardHtml(p) {
+            const img = (p.images && p.images[0]) || '';
+            const title = p.title || 'Untitled product';
+            const price = (p.price !== undefined) ? '$' + p.price : '—';
+            const available = p.available;
+            const tags = (p.tags || []).slice(0, 3);
+            const pid = p.id || '';
+            return `
+              <div class="product-card">
+                ${img ? `<img src="${img}" loading="lazy" onerror="this.style.display='none'">` : ''}
+                <div class="pbody">
+                  <div class="ptitle">${title}</div>
+                  <span class="pprice">${price}</span>
+                  ${available !== undefined ? `<span class="pavail ${available ? 'yes' : 'no'}">${available ? 'IN STOCK' : 'SOLD OUT'}</span>` : ''}
+                  <div class="ptags">${tags.map(t => `<span class="badge">${t}</span>`).join('')}</div>
+                  <div class="pactions">
+                    <button class="btn-link" style="margin:0; padding:6px; flex:1; text-align:center;" onclick="sendToIntel('${pid}')">Deep Scan →</button>
+                  </div>
+                </div>
+              </div>`;
+        }
+
+        function supplierLinksHtml(title) {
+            if (!title) return '<span class="text-muted">Run an analysis first.</span>';
+            const q = encodeURIComponent(title);
+            return `
+              <a class="btn-link" target="_blank" rel="noopener" href="https://www.aliexpress.com/wholesale?SearchText=${q}">🛒 Search on AliExpress</a>
+              <a class="btn-link orange" target="_blank" rel="noopener" href="https://cjdropshipping.com/search?keyword=${q}">📦 Search on CJ Dropshipping</a>
+              <a class="btn-link green" target="_blank" rel="noopener" href="https://s.1688.com/selloffer/offer_search.htm?keywords=${q}">🏭 Search on 1688</a>`;
+        }
+
+        async function runAnalysis() {
+            const url = document.getElementById('storeUrl').value.trim();
+            clearMsg('auditorMsg');
+            if (!url) { showMsg('auditorMsg', 'err', 'Please enter a store URL.'); return; }
+
+            const btn = document.getElementById('runAnalysisBtn');
+            btn.disabled = true;
+            document.getElementById('loader').classList.add('show');
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const data = await apiCall('/analyze', { method: 'POST', body: JSON.stringify({ url }) });
+                currentAnalysisResult = data;
+
+                if (data.status === 'error') {
+                    showMsg('auditorMsg', 'err', data.message || 'Analysis failed.');
+                    document.getElementById('loader').classList.remove('show');
+                    btn.disabled = false;
+                    return;
+                }
+
+                const products = data.extracted_products || data.products || [];
+                const lead = products[0] || {};
+                currentLeadProductTitle = lead.title || null;
+                lastStoreDomain = (data.url || url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+                document.getElementById('competitorId').value = lastStoreDomain;
+                auditCount++;
+                document.getElementById('reportsHistory').textContent = `${auditCount} audit(s) run this session — last: ${lastStoreDomain}`;
+
+                document.getElementById('resTitle').textContent = lead.title || (data.niche || 'Store analyzed');
+                document.getElementById('resSub').textContent = `${lastStoreDomain} | ${data.platform || 'Unknown platform'}`;
+                document.getElementById('resPrice').textContent = lead.price !== undefined ? '$' + lead.price : '—';
+                document.getElementById('resStock').textContent = lead.available === undefined ? '—' : (lead.available ? 'In stock' : 'Sold out');
+                document.getElementById('resCount').textContent = products.length;
+                document.getElementById('resVariants').textContent = lead.variants_count !== undefined ? lead.variants_count : '—';
+                document.getElementById('resPlatform').textContent = data.platform || 'Unknown';
+                document.getElementById('resNiche').textContent = data.niche || '—';
+                document.getElementById('resAdAngle').textContent = (lead.tags && lead.tags.length) ? lead.tags.slice(0, 6).join(', ') : 'No tags scraped for lead product.';
+                document.getElementById('resPersona').textContent = (data.ai_report && data.ai_report.summary) ? data.ai_report.summary : 'Not provided by current scan.';
+                document.getElementById('resTechStack').innerHTML = 'Not fetched yet — <span style="color:var(--accent); cursor:pointer;" onclick="runTechStackLookup()">run tech stack check</span>';
+                document.getElementById('resSupplierLinks').innerHTML = supplierLinksHtml(currentLeadProductTitle);
+
+                const metaUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(lastStoreDomain)}`;
+                const tiktokUrl = `https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en?region=US&keyword=${encodeURIComponent(lastStoreDomain)}`;
+                document.getElementById('metaAdLink').href = metaUrl;
+                document.getElementById('tiktokAdLink').href = tiktokUrl;
+
+                document.getElementById('resProductGrid').innerHTML = products.length
+                    ? products.map(productCardHtml).join('')
+                    : '<div class="empty-state">No products extracted.</div>';
+
+                showMsg('auditorMsg', 'ok', `Analysis complete for ${lastStoreDomain}.`);
+                document.getElementById('results').style.display = 'block';
+            } catch (e) {
+                showMsg('auditorMsg', 'err', e.message || 'Something went wrong.');
+            } finally {
+                document.getElementById('loader').classList.remove('show');
+                btn.disabled = false;
+            }
+        }
+
+        async function runTechStackLookup() {
+            if (!lastStoreDomain) return;
+            document.getElementById('resTechStack').textContent = 'Fetching…';
+            try {
+                const data = await apiCall(`/competitor-analysis/${encodeURIComponent(lastStoreDomain)}`, { method: 'GET' });
+                if (data.status === 'error') {
+                    document.getElementById('resTechStack').textContent = data.message || 'Tech stack not available for this store.';
+                } else {
+                    document.getElementById('resTechStack').innerHTML = `<div class="raw-box" style="margin-top:6px;">${JSON.stringify(data, null, 2)}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('resTechStack').textContent = 'Could not reach backend.';
+            }
+        }
+
+        function downloadReport(format) {
+            if (!currentAnalysisResult) { alert('Run an analysis first.'); return; }
+            if (format === 'json') {
+                const blob = new Blob([JSON.stringify(currentAnalysisResult, null, 2)], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `cloudanalyzer_report_${Date.now()}.json`;
+                link.click();
+            } else {
+                // Real PDF: opens the browser print dialog on a clean printable view — user saves as PDF.
+                window.print();
+            }
+        }
+
+        function sendToIntel(pid) {
+            document.getElementById('intelProductId').value = pid;
+            switchPage('intel');
+        }
+
+        // ---------- Search Products ----------
+        async function runSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            clearMsg('searchMsg');
+            if (!query) { showMsg('searchMsg', 'err', 'Enter a search query.'); return; }
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            document.getElementById('searchLoader').classList.add('show');
+            document.getElementById('searchResultsWrap').style.display = 'none';
+            try {
+                const data = await apiCall('/search-products', { method: 'POST', body: JSON.stringify({ query }) });
+                if (data.status === 'error') {
+                    showMsg('searchMsg', 'err', data.message || 'Search failed.');
+                } else {
+                    const results = data.results || data.products || [];
+                    showMsg('searchMsg', 'ok', `${results.length} result(s) for "${query}".`);
+                    document.getElementById('searchGrid').innerHTML = results.length
+                        ? results.map(productCardHtml).join('')
+                        : '<div class="empty-state">No matches found.</div>';
+                    document.getElementById('searchRaw').textContent = JSON.stringify(data, null, 2);
+                    document.getElementById('searchResultsWrap').style.display = 'block';
+                }
+            } catch (e) {
+                showMsg('searchMsg', 'err', e.message);
+            } finally {
+                btn.disabled = false;
+                document.getElementById('searchLoader').classList.remove('show');
+            }
+        }
+
+        // ---------- Product Intel ----------
+        function setIntelTab(tab, el) {
+            document.querySelectorAll('#page-intel .tab-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            activeIntelTab = tab;
+        }
+        const intelEndpoints = {
+            trend: id => `/analyze-trend/${id}`,
+            price: id => `/price-intelligence/${id}`,
+            saturation: id => `/saturation-analysis/${id}`,
+            opportunity: id => `/opportunity-score/${id}`,
+        };
+        async function runIntel() {
+            const id = document.getElementById('intelProductId').value.trim();
+            clearMsg('intelMsg');
+            document.getElementById('intelResultCard').style.display = 'none';
+            if (!id) { showMsg('intelMsg', 'err', 'Enter a product ID.'); return; }
+            const btn = document.getElementById('intelBtn');
+            btn.disabled = true;
+            document.getElementById('intelLoader').classList.add('show');
+            try {
+                const data = await apiCall(intelEndpoints[activeIntelTab](id), { method: 'GET' });
+                if (data.status === 'error') {
+                    showMsg('intelMsg', 'err', data.message || 'Lookup failed.');
+                } else {
+                    showMsg('intelMsg', 'ok', `${activeIntelTab} data retrieved.`);
+                    document.getElementById('intelOut').textContent = JSON.stringify(data, null, 2);
+                    document.getElementById('intelResultCard').style.display = 'block';
+                }
+            } catch (e) {
+                showMsg('intelMsg', 'err', e.message);
+            } finally {
+                btn.disabled = false;
+                document.getElementById('intelLoader').classList.remove('show');
+            }
+        }
+
+        // ---------- Competitor Analysis ----------
+        async function runCompetitor() {
+            const id = document.getElementById('competitorId').value.trim();
+            clearMsg('competitorMsg');
+            document.getElementById('competitorResultCard').style.display = 'none';
+            if (!id) { showMsg('competitorMsg', 'err', 'Enter a store ID or domain.'); return; }
+            const btn = document.getElementById('competitorBtn');
+            btn.disabled = true;
+            document.getElementById('competitorLoader').classList.add('show');
+            try {
+                const data = await apiCall(`/competitor-analysis/${encodeURIComponent(id)}`, { method: 'GET' });
+                if (data.status === 'error') {
+                    showMsg('competitorMsg', 'err', data.message || 'Lookup failed.');
+                } else {
+                    showMsg('competitorMsg', 'ok', `Competitor data retrieved for ${id}.`);
+                    document.getElementById('competitorOut').textContent = JSON.stringify(data, null, 2);
+                    document.getElementById('competitorResultCard').style.display = 'block';
+                }
+            } catch (e) {
+                showMsg('competitorMsg', 'err', e.message);
+            } finally {
+                btn.disabled = false;
+                document.getElementById('competitorLoader').classList.remove('show');
+            }
+        }
+
+        // ---------- Profit Calculator ----------
+        async function runProfitCalc() {
+            const cost = parseFloat(document.getElementById('pCost').value) || 0;
+            const sell = parseFloat(document.getElementById('pSell').value) || 0;
+            const ship = parseFloat(document.getElementById('pShip').value) || 0;
+            const ad = parseFloat(document.getElementById('pAd').value) || 0;
+            const feePct = parseFloat(document.getElementById('pFee').value) || 0;
+            clearMsg('profitMsg');
+            if (!sell) { showMsg('profitMsg', 'err', 'Enter at least a selling price.'); return; }
+
+            const feeCost = sell * (feePct / 100);
+            const totalCost = cost + ship + ad + feeCost;
+            const netProfit = sell - totalCost;
+            const margin = sell ? (netProfit / sell * 100) : 0;
+            const breakeven = netProfit > 0 && ad > 0 ? Math.ceil(ad / netProfit) : '—';
+
+            document.getElementById('rNetProfit').textContent = '$' + netProfit.toFixed(2);
+            document.getElementById('rMargin').textContent = margin.toFixed(1) + '%';
+            document.getElementById('rTotalCost').textContent = '$' + totalCost.toFixed(2);
+            document.getElementById('rBreakeven').textContent = breakeven;
+            document.getElementById('profitStats').style.display = 'grid';
+
+            const btn = document.getElementById('profitBtn');
+            btn.disabled = true;
+            document.getElementById('profitLoader').classList.add('show');
+            try {
+                const data = await apiCall('/calculate-profit', {
+                    method: 'POST',
+                    body: JSON.stringify({ cost, selling_price: sell, shipping_cost: ship, ad_spend: ad, platform_fee_percent: feePct })
+                });
+                document.getElementById('profitRawCard').style.display = 'block';
+                document.getElementById('profitRaw').textContent = JSON.stringify(data, null, 2);
+                if (data.status === 'error') {
+                    showMsg('profitMsg', 'info', 'Local estimate shown above. Backend: ' + (data.message || 'field names may need matching to your schema.'));
+                } else {
+                    showMsg('profitMsg', 'ok', 'Confirmed against backend.');
+                }
+            } catch (e) {
+                showMsg('profitMsg', 'info', 'Local estimate shown above (backend unreachable).');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('profitLoader').classList.remove('show');
+            }
+        }
+
+        // ---------- Auth ----------
+        function openAuthModal(type) {
+            authMode = type;
+            document.getElementById('authModalTitle').innerText = (type === 'login') ? 'Log In to CloudAnalyzer' : 'Create Account';
+            document.getElementById('authSubmitBtn').innerText = (type === 'login') ? 'Log In' : 'Create Account';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPass').value = '';
+            document.getElementById('authMsg').className = 'auth-msg';
+            document.getElementById('authModal').classList.add('show');
+        }
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('show');
+        }
+        async function submitAuth() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPass').value;
+            const msgEl = document.getElementById('authMsg');
+            if (!email || !password) {
+                msgEl.className = 'auth-msg show err';
+                msgEl.textContent = 'Enter both email and password.';
+                return;
+            }
+            const path = authMode === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register';
+            try {
+                const data = await apiCall(path, { method: 'POST', body: JSON.stringify({ email, password }) });
+                if (authMode === 'login') {
+                    if (data.access_token) {
+                        AUTH_TOKEN = data.access_token;
+                        document.getElementById('sessionTokenView').value = AUTH_TOKEN.slice(0, 32) + '...';
+                        document.getElementById('authBtnGroup').innerHTML = `<span style="color:#c9d1d9; margin-right:10px; font-size:13px;">${email}</span><button class="btn btn-logout" onclick="logout()">Log Out</button>`;
+                        msgEl.className = 'auth-msg show ok';
+                        msgEl.textContent = 'Logged in.';
+                        setTimeout(closeAuthModal, 700);
+                    } else {
+                        msgEl.className = 'auth-msg show err';
+                        msgEl.textContent = data.message || data.detail || 'Login failed — check credentials.';
+                    }
+                } else {
+                    if (data.__httpStatus === 200 || data.__httpStatus === 201) {
+                        msgEl.className = 'auth-msg show ok';
+                        msgEl.textContent = 'Account created — you can log in now.';
+                        setTimeout(() => openAuthModal('login'), 900);
+                    } else {
+                        msgEl.className = 'auth-msg show err';
+                        msgEl.textContent = data.message || data.detail || 'Registration failed.';
+                    }
+                }
+            } catch (e) {
+                msgEl.className = 'auth-msg show err';
+                msgEl.textContent = e.message;
+            }
+        }
+        function logout() {
+            AUTH_TOKEN = null;
+            document.getElementById('sessionTokenView').value = 'Not logged in';
+            document.getElementById('authBtnGroup').innerHTML = `
+                <button class="btn btn-login" onclick="openAuthModal('login')">Log In</button>
+                <button class="btn btn-signup" onclick="openAuthModal('signup')">Sign Up</button>`;
+        }
+    </script>
+</body>
+</html>
+
+    """
 
 if __name__ == "__main__":
     import uvicorn
