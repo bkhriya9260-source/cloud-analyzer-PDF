@@ -2,9 +2,13 @@ from elasticsearch import Elasticsearch
 from typing import Dict, Any, List
 
 class SearchIndex:
-    def __init__(self, es_host: str = "http://localhost:9200"):
-        self.es = Elasticsearch([es_host])
-        self.index_name = "products"
+   import os
+
+def __init__(self, es_host: str = None):
+    if es_host is None:
+        es_host = os.getenv("ELASTICSEARCH_URL", "http://localhost:9200")
+    self.es = Elasticsearch([es_host])
+    self.index_name = "products"
 
     def index_product(self, product_id: str, document: Dict[str, Any]):
         self.es.index(index=self.index_name, id=product_id, document=document)
@@ -40,5 +44,9 @@ class SearchIndex:
             }
         }
 
+    try:
         response = self.es.search(index=self.index_name, body=search_query)
         return [hit["_source"] for hit in response["hits"]["hits"]]
+   except Exception as e:
+        print(f"Elasticsearch query failed: {e}")
+        return []
