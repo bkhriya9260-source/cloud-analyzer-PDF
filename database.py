@@ -117,4 +117,16 @@ def get_db():
     try:
         yield db
     finally:
-        db.close()
+      db.close()
+
+        # --- Backwards Compatibility Aliases & Extra Models ---
+ProductModel = Product
+StoreModel = Store
+
+class OpportunityScoreModel(Base):
+    __tablename__ = "opportunity_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"))
+    score = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
