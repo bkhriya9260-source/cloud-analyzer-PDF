@@ -41,4 +41,4 @@ class SearchIndex:
         }
 
         response = self.es.search(index=self.index_name, body=search_query)
-        return [hit["_source"] for hit in response["hits"]["hits"]]-
+        return [hit["_source"] for hit in response["hits"]["hits"]]
