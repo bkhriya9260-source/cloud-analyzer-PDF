@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from product_search import ProductSearchEngine
-from ai_engine import calculate_opportunity_score
+from ai_analyzer import calculate_opportunity_score
 
 class ProductUIController:
     def __init__(self, db: Session):
