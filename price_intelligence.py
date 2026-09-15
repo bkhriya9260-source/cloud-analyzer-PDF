@@ -1,49 +1,108 @@
-from typing import List, Dict, Any
-import statistics
+
+from typing import Dict, Any
+from sqlalchemy.orm import Session
+from database import Product, PriceHistory
+
 
 class PriceIntelligenceEngine:
-    def __init__(self):
-        pass
+    def __init__(self, db: Session):
+        self.db = db
 
-    def analyze_market_pricing(self, price_list: List[float]) -> Dict[str, Any]:
-        """Calculates market average, min/max bounds, price spread, and discount alerts"""
-        valid_prices = [p for p in price_list if p > 0]
+    def analyze_market_pricing(self, product_id: int) -> Dict[str, Any]:
+        """
+        Reads one product's saved price history and reports
+        its latest price and change from the previous recorded price.
+        """
 
-        if not valid_prices:
-            return {"error": "No valid pricing data available"}
+        product = (
+            self.db.query(Product)
+            .filter(Product.id == product_id)
+            .first()
+        )
 
-        lowest = min(valid_prices)
-        highest = max(valid_prices)
-        avg_price = round(statistics.mean(valid_prices), 2)
-        median_price = round(statistics.median(valid_prices), 2)
+        if not product:
+            return {
+                "status": "error",
+                "message": f"Product with ID {product_id} was not found."
+            }
 
-        return {
-            "lowest_market_price": lowest,
-            "highest_market_price": highest,
-            "market_average_price": avg_price,
-            "market_median_price": median_price,
-            "total_competitors_analyzed": len(valid_prices),
-            "recommended_sweet_spot_price": round(avg_price * 0.95, 2)
-        }
+        history = (
+            self.db.query(PriceHistory)
+            .filter(PriceHistory.product_id == product_id)
+            .order_by(PriceHistory.recorded_at.asc(), PriceHistory.id.asc())
+            .all()
+        )
 
-    def detect_price_changes(self, old_price: float, new_price: float) -> Dict[str, Any]:
-        """Detects discounts or price hikes"""
-        if old_price <= 0:
-            return {"type": "NO_CHANGE", "percentage": 0.0}
+        # Include the product's current saved price if it is not
+        # already the latest recorded price.
+        prices = []
 
-        diff = new_price - old_price
-        pct_change = round((diff / old_price) * 100, 2)
+        for item in history:
+            try:
+                price = float(item.price)
+                if price > 0:
+                    prices.append({
+                        "price": price,
+                        "recorded_at": item.recorded_at.isoformat()
+                        if item.recorded_at else None
+                    })
+            except (TypeError, ValueError):
+                continue
 
-        if pct_change < 0:
-            event_type = "PROMOTION_OR_PRICE_DROP"
-        elif pct_change > 0:
-            event_type = "PRICE_HIKE"
+        try:
+            current_price = float(product.selling_price)
+        except (TypeError, ValueError):
+            current_price = 0.0
+
+        if current_price > 0:
+            latest_history_price = prices[-1]["price"] if prices else None
+
+            if latest_history_price != current_price:
+                prices.append({
+                    "price": current_price,
+                    "recorded_at": None,
+                    "source": "current_product_price"
+                })
+
+        if not prices:
+            return {
+                "status": "no_data",
+                "product_id": product_id,
+                "message": "No valid price history or current price is available.",
+                "price_history": []
+            }
+
+        latest = prices[-1]
+        previous = prices[-2] if len(prices) >= 2 else None
+
+        if previous:
+            old_price = previous["price"]
+            new_price = latest["price"]
+            difference = round(new_price - old_price, 2)
+            percentage = round((difference / old_price) * 100, 2)
+
+            if difference < 0:
+                change_type = "PRICE_DROP"
+            elif difference > 0:
+                change_type = "PRICE_HIKE"
+            else:
+                change_type = "STABLE"
         else:
-            event_type = "STABLE"
+            old_price = None
+            new_price = latest["price"]
+            difference = None
+            percentage = None
+            change_type = "NOT_ENOUGH_HISTORY"
 
         return {
-            "type": event_type,
-            "percentage_change": abs(pct_change),
-            "old_price": old_price,
-            "new_price": new_price
+            "status": "success",
+            "product_id": product_id,
+            "product_title": product.title,
+            "current_price": latest["price"],
+            "previous_price": old_price,
+            "price_difference": difference,
+            "percentage_change": percentage,
+            "change_type": change_type,
+            "history_count": len(prices),
+            "price_history": prices
         }
